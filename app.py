@@ -11,5 +11,9 @@ app.register_blueprint(chat_bp)
 app.register_blueprint(login_bp)
 app.secret_key = os.urandom(24)
 
+@app.route('/ping')
+def pingpong():
+    return 'pong'
+
 if __name__ == '__main__':
     app.run(debug=True)
