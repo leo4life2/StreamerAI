@@ -9,7 +9,7 @@ cors = CORS(app)
 
 app.register_blueprint(chat_bp)
 app.register_blueprint(login_bp)
+app.secret_key = os.urandom(24)
 
 if __name__ == '__main__':
-    app.secret_key = os.urandom(24)
     app.run(debug=True)
