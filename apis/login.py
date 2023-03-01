@@ -1,5 +1,6 @@
 from flask import Blueprint, session, request, current_app, json
 import base64
+import re
 
 login_bp = Blueprint('login', __name__)
 
@@ -14,7 +15,7 @@ def login():
     decoded = base64.b64decode(encoded_credentials).decode('utf-8')
     username, password = decoded.split(':')
     
-    if username == 'test' and password == 'test':
+    if re.match('^[a-zA-Z0-9_]+$',username) and len(username) <= 20 and password == 'test':
         session['username'] = username
         return json.jsonify({'message': 'login successful'}), 200
 

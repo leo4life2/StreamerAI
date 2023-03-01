@@ -17,11 +17,11 @@ def chat():
     decoded = base64.b64decode(encoded_credentials).decode('utf-8')
     username, password = decoded.split(':')
     
-    if username != 'test' or password != 'test':
+    if password != 'test':
         session['username'] = username
         current_app.logger.info(f"Session: {session}")
         return json.jsonify({'message': 'login failed'}), 401
-    
+
     # if not session.get('username'):
     #     return json.jsonify({'message': 'login failed'}), 401
     # End of login check
