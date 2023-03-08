@@ -1,10 +1,11 @@
-from langchain import OpenAI, ConversationChain, LLMChain, PromptTemplate
-from langchain.chains.conversation.memory import ConversationalBufferWindowMemory
+from langchain import LLMChain, PromptTemplate
+from langchain.llms import OpenAIChat
+from langchain.memory import ConversationBufferWindowMemory
 from .prompt import PREFIX, IDSG_CONTEXT
 
 class Chains:
     chatid_to_chain = {}
-     
+    
     @staticmethod
     def create_chain(temperature=0.0, verbose=False):
         # TODO: hardcoded with the IDSG product context for now.
@@ -20,10 +21,10 @@ class Chains:
         )
 
         chatgpt_chain = LLMChain(
-            llm=OpenAI(temperature=temperature), 
+            llm=OpenAIChat(model_name="gpt-3.5-turbo", temperature=temperature), 
             prompt=prompt, 
             verbose=verbose, 
-            memory=ConversationalBufferWindowMemory(k=3), # only keep the last 3 interactions
+            memory=ConversationBufferWindowMemory(k=3), # only keep the last 3 interactions
         )
         
         return chatgpt_chain
