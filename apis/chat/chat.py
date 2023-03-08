@@ -1,6 +1,7 @@
 from flask import Blueprint, session, request, json, current_app
 from .gpt.chains import Chains
 import base64
+import logging
 
 chat_bp = Blueprint('chat', __name__)
 
@@ -33,4 +34,6 @@ def chat():
     
     chain = Chains.get_chain(chatUUID) # each chain w/ its own memory for each chat. Not persistent.
     response = chain.predict(human_input=message)
+    logging.info(f"For chatUUID: {chatUUID}, message: {message}, response: {response}")
+    
     return json.jsonify({'message': response}), 200
