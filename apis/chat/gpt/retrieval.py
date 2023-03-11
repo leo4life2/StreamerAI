@@ -7,7 +7,7 @@ RETRIEVAL_CHARACTER_LIMIT = 500
 embeddings = OpenAIEmbeddings()
 vectorstore = Chroma(
     embedding_function=embeddings,
-    persist_directory='./data/chroma'
+    persist_directory='apis/chat/gpt/data/chroma'
 )
 
 def retrieve_with_embedding(message):
@@ -23,17 +23,16 @@ def retrieve_with_prompt(message):
     You are an AI-powered sales assistant who is well-versed in the features and benefits of the product you are selling.
     You have a deep understanding of the Chinese language and can communicate with potential customers in a clear and confident manner.
     With your expertise and knowledge, you can provide personalized recommendations and use your best judgement to decide which product to best recommend.
-    Your goal is given a list of product names and product descriptions, return the name that is most related to the customer's question or statement.
+    Your goal is given a list of product descriptions, return the number of the product description that is most related to the customer's question or statement.
 
-    You should only return a product name from the following list below:
+    List of product descriptions:
 
-    Product Name # Product Description
-    - 19.txt # "近江兄弟淘宝官方旗舰店网址"
-    - 21.txt # "花王念朵京东自营旗舰店网址"
-    - 22.txt # "大王纸"
+    1) "日本进口花王马桶去污清洁剂，去污去味，高效洁净不留死角"
+    2) "大王Elleair抽取式面巾纸，三层柔韧持久，湿水不易皱，无屑抗敏感，适合宝宝肉内肌肤，方便携带"
+    3) "安娜美肌牙膏，意大利原装进口，欧洲先锋护理口腔护理品牌，小苏打薄荷香清新口气，慕斯状膏体泡沫绵密。"
 
     Customer Question: "Which one should be used for my skin?"
-    Product: 22.txt
+    Product: 1
 
     Customer Question: {question}
     Product:
@@ -42,13 +41,18 @@ def retrieve_with_prompt(message):
     llm_chain = LLMChain(prompt=prompt, llm=OpenAI(temperature=0), verbose=True)
     result = llm_chain.predict(question=message)
 
-    # llm likes to insert random spaces in result
-    cleaned_result = ''.join(c for c in result if c.isalnum() or c == ".")
+    # llm results are messy, sometimes it's "Answer2", "2", or "2大王Elleair抽取..."
+    # let's take only numbers, then take the first number
+    cleaned_result = ''.join(c for c in result if c in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])[0:]
     print(cleaned_result)
 
-    valid_filenames = ["19.txt", "21.txt", "22.txt"]
-    if cleaned_result in valid_filenames:
-        filename = "./data/products/" + cleaned_result
+    number_to_filename = {
+        "1": "21.txt",
+        "2": "22.txt",
+        "3": "18.txt"
+    }
+    if cleaned_result in number_to_filename:
+        filename = "./data/products/" + number_to_filename[cleaned_result]
         f = open(filename, "r")
         return f.read()
 
