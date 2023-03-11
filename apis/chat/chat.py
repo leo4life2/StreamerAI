@@ -31,8 +31,9 @@ def chat():
     message = data.get('message')
     chatUUID = data.get('conversationIdentifier')
     product = data.get('product')
+    retrieval_method = data.get('retrieval_method') # assuming FE has an LLM selection toggle
     
-    chain = Chains.get_chain(chatUUID) # each chain w/ its own memory for each chat. Not persistent.
+    chain = Chains.get_chain(chatUUID, retrieval_method, message) # each chain w/ its own memory for each chat. Not persistent.
     response = chain.predict(human_input=message)
     logging.info(f"For chatUUID: {chatUUID}, message: {message}, response: {response}")
     
