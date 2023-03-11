@@ -2,13 +2,14 @@ from langchain import LLMChain, PromptTemplate
 from langchain.llms import OpenAIChat
 from langchain.memory import ConversationBufferWindowMemory
 from .prompt import PREFIX, IDSG_CONTEXT
+from .retrieval import retrieve_with_embedding
 
 class Chains:
     chatid_to_chain = {}
     
-    @staticmethod
-    def create_chain(temperature=0.0, verbose=False):
-        # TODO: hardcoded with the IDSG product context for now.
+    @classmethod
+    def create_chain(cls, temperature=0.0, verbose=False, retrieval_method='default', message):
+        product_context = cls.get_idsg_context(retrieval_method, message)
         template = PREFIX + IDSG_CONTEXT + """
         {history}
 
@@ -29,11 +30,18 @@ class Chains:
         
         return chatgpt_chain
     
+    @staticmethod
+    def get_idsg_context(retrieval_method, message):
+        if retrieval_method == 'embedding_retrieval':
+            return retrieve_with_embedding(message)
+        if retrieval_method == 'prompt_retrieval':
+            return ''
+        return IDSG_CONTEXT
+
     @classmethod
-    def get_chain(cls, chatid):
+    def get_chain(cls, chatid, retrieval_method, message):
         if chatid in cls.chatid_to_chain:
             return cls.chatid_to_chain[chatid]
-        
-        chain = cls.create_chain()
+        chain = cls.create_chain(retrieval_method, message)
         cls.chatid_to_chain[chatid] = chain
         return chain
