@@ -31,7 +31,7 @@ vectorstore = Chroma.from_texts(
     texts,
     embeddings,
     metadatas,
-    persist_directory='../apis/chat/gpt/data/chroma'
+    persist_directory='../chroma'
 )
 
 # persist to the directory specified above

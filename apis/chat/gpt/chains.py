@@ -2,7 +2,7 @@ from langchain import LLMChain, PromptTemplate
 from langchain.llms import OpenAIChat
 from langchain.memory import ConversationBufferWindowMemory
 from .prompt import PREFIX, IDSG_CONTEXT
-from .retrieval import retrieve_with_embedding
+from .retrieval import retrieve_with_embedding, retrieve_with_prompt
 
 class Chains:
     chatid_to_chain = {}
@@ -35,7 +35,7 @@ class Chains:
         if retrieval_method == 'embedding_retrieval':
             return retrieve_with_embedding(message)
         if retrieval_method == 'prompt_retrieval':
-            return ''
+            return retrieve_with_prompt(message)
         return IDSG_CONTEXT
 
     @classmethod
