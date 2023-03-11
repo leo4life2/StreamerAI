@@ -1,14 +1,9 @@
-from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.vectorstores import Chroma
-from langchain import PromptTemplate, OpenAI, LLMChain
+from langchain.vectorstores import Pinecone
+from langchain import PromptTemplate, LLMChain, OpenAI
+from settings import PINECONE_INDEX, PINECONE_TEXT_KEY, OPENAI_EMBEDDINGS
+import os
 
-RETRIEVAL_CHARACTER_LIMIT = 500
-
-embeddings = OpenAIEmbeddings()
-vectorstore = Chroma(
-    embedding_function=embeddings,
-    persist_directory='apis/chat/gpt/data/chroma'
-)
+vectorstore = Pinecone(PINECONE_INDEX, OPENAI_EMBEDDINGS.embed_query, PINECONE_TEXT_KEY)
 
 def retrieve_with_embedding(message):
     # retrieve top document
@@ -52,7 +47,7 @@ def retrieve_with_prompt(message):
         "3": "18.txt"
     }
     if cleaned_result in number_to_filename:
-        filename = "./data/products/" + number_to_filename[cleaned_result]
+        filename = "./data/" + number_to_filename[cleaned_result]
         f = open(filename, "r")
         return f.read()
 
