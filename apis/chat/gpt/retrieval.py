@@ -1,6 +1,6 @@
 from langchain.vectorstores import Pinecone
 from langchain import PromptTemplate, LLMChain, OpenAI
-from settings import PINECONE_INDEX, PINECONE_TEXT_KEY, OPENAI_EMBEDDINGS
+from .settings import PINECONE_INDEX, PINECONE_TEXT_KEY, OPENAI_EMBEDDINGS
 import os
 
 vectorstore = Pinecone(PINECONE_INDEX, OPENAI_EMBEDDINGS.embed_query, PINECONE_TEXT_KEY)
