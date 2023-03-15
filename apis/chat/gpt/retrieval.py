@@ -1,9 +1,9 @@
 from langchain.vectorstores import Pinecone
 from langchain import PromptTemplate, LLMChain, OpenAI
-from .settings import PINECONE_INDEX, PINECONE_TEXT_KEY, OPENAI_EMBEDDINGS
+import settings
 import os
 
-vectorstore = Pinecone(PINECONE_INDEX, OPENAI_EMBEDDINGS.embed_query, PINECONE_TEXT_KEY)
+vectorstore = Pinecone(settings.PINECONE_INDEX, settings.OPENAI_EMBEDDINGS.embed_query, settings.PINECONE_TEXT_KEY)
 
 def retrieve_with_embedding(message):
     # retrieve top document
