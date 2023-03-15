@@ -1,6 +1,6 @@
 from langchain.vectorstores import Pinecone
 from langchain import PromptTemplate, LLMChain, OpenAI
-import settings
+from apis.chat.gpt import settings
 import os
 
 vectorstore = Pinecone(settings.PINECONE_INDEX, settings.OPENAI_EMBEDDINGS.embed_query, settings.PINECONE_TEXT_KEY)
@@ -9,7 +9,7 @@ def retrieve_with_embedding(message):
     # retrieve top document
     documents = vectorstore.similarity_search(message, 1)
     if len(documents) > 0:
-        return documents[0].page_content
+        return documents[0].page_content, documents[0].metadata['ix']
     return ''
 
 def retrieve_with_prompt(message):
@@ -43,28 +43,31 @@ def retrieve_with_prompt(message):
     18) "日本大王爱璐儿elleair超软宝宝专用保湿纸巾抽纸婴儿用纸60抽*4"
     ```
 
-    The returned number must be between 1 and 18.
+    The response MUST only be a number. The returned number must be between 1 and 18. Even if you're not sure, make a guess.
 
-    Customer Question: "Which one should be used for my skin?"
-    Product: 1
+    Customer Question: "我想买一瓶钙片"
+    Product: 2
+    
+    Customer Question: "我想减肥"
+    Product: 9
 
     Customer Question: {question}
     Product:
     """
     prompt = PromptTemplate(template=template, input_variables=["question"])
-    llm_chain = LLMChain(prompt=prompt, llm=OpenAI(temperature=0), verbose=True)
+    llm_chain = LLMChain(prompt=prompt, llm=OpenAI(temperature=0), verbose=False)
     result = llm_chain.predict(question=message)
-    print("llm returned: {}".format(result))
+    # print("llm returned: {}".format(result))
 
     # llm results are messy, sometimes it's "Answer2", "2", or "2大王Elleair抽取..."
     # let's take only numbers, then take the first number
     cleaned_result = ''.join(c for c in result if c in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])[0:]
-    print("cleaned_result: {}".format(cleaned_result))
+    # print("cleaned_result: {}".format(cleaned_result))
     if cleaned_result == None:
         return ''
-
-    filename = "./data/" + str(cleaned_result) + ".txt"
+    
+    filename = os.path.join(os.path.dirname(__file__), "data", f"{cleaned_result}.txt")
     f = open(filename, "r")
     text = f.read()
-    print("returned text: {}".format(text))
-    return text
+    # print("returned text: {}".format(text))
+    return text, cleaned_result

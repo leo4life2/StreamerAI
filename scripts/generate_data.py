@@ -3,7 +3,7 @@ import sys
 import os
 
 from langchain.vectorstores import Pinecone
-from settings import PINECONE_INDEX, PINECONE_INDEX_NAME, PINECONE_TEXT_KEY, OPENAI_EMBEDDINGS
+from apis.chat.gpt.settings import PINECONE_INDEX, PINECONE_INDEX_NAME, PINECONE_TEXT_KEY, OPENAI_EMBEDDINGS
 
 from openpyxl import load_workbook
 
