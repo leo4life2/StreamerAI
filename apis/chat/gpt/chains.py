@@ -8,9 +8,10 @@ class Chains:
     chatid_to_chain = {}
     
     @classmethod
-    def create_chain(cls, temperature=0.0, verbose=False, retrieval_method='', message=''):
+    def create_chain(cls, retrieval_method, message, temperature=0.0, verbose=False):
         product_context = cls.get_idsg_context(retrieval_method, message)
-        template = PREFIX + product_context + """
+        print("product context: {}".format(product_context))
+        template = PREFIX + product_context[0] + """
         {history}
 
         Human: {human_input}
