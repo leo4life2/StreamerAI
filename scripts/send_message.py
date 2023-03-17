@@ -11,7 +11,7 @@ while True:
         "http://127.0.0.1:5000/chat",
         auth=basic_auth,
         json={
-            "message": "hello",
+            "message": message,
             "conversationIdentifier": uuid_string,
             "retrieval_method": "embedding_retrieval"
         }
