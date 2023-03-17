@@ -10,7 +10,7 @@ class Chains:
     @classmethod
     def create_chain(cls, retrieval_method, message, temperature=0.0, verbose=False):
         product_context = cls.get_idsg_context(retrieval_method, message)
-        print("product context: {}".format(product_context))
+        print("Using Product Context: {}".format(product_context))
         template = PREFIX + product_context[0] + """
         {history}
 
