@@ -21,7 +21,7 @@ class Chains:
         Assistant:"""
 
         prompt = PromptTemplate(
-            input_variables=["history", "human_input"], 
+            input_variables=["history", "human_input", "product_context"], 
             template=template
         )
 
