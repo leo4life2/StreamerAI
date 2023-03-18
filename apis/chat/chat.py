@@ -31,7 +31,7 @@ def chat():
     message = data.get('message')
     chatUUID = data.get('conversationIdentifier')
     product = data.get('product')
-    retrieval_method = data.get('retrieval_method') # assuming FE has an LLM selection toggle
+    retrieval_method = data.get('retrievalMethod')
     
     chain = Chains.get_chain(chatUUID) # each chain w/ its own memory for each chat. Not persistent.
     
