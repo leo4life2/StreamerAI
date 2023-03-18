@@ -43,7 +43,7 @@ class Chains:
         return retrieve_with_embedding(message)
 
     @classmethod
-    def get_chain(cls, chatid, retrieval_method, message):
+    def get_chain(cls, chatid):
         if chatid in cls.chatid_to_chain:
             return cls.chatid_to_chain[chatid]
         chain = cls.create_chain()
