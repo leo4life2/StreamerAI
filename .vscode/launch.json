@@ -1,0 +1,22 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "name": "Run Gunicorn",
+            "type": "python",
+            "request": "launch",
+            "module": "gunicorn",
+            "args": [
+                "app:app",
+                "--bind",
+                "0.0.0.0:8000"
+            ],
+            "env": {
+                "PINECONE_API_KEY": "8ee080b1-b1b9-4d62-8d56-4c02ffa79a5a",
+                "OPENAI_API_KEY": "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",
+            },
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}

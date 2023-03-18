@@ -32,7 +32,7 @@ class Chains:
             memory=ConversationBufferWindowMemory(k=3), # only keep the last 3 interactions
         )
         
-        return chatgpt_chain
+        return chatgpt_chain, prompt
     
     @staticmethod
     def get_idsg_context(retrieval_method, message):
@@ -46,6 +46,6 @@ class Chains:
     def get_chain(cls, chatid):
         if chatid in cls.chatid_to_chain:
             return cls.chatid_to_chain[chatid]
-        chain = cls.create_chain()
-        cls.chatid_to_chain[chatid] = chain
-        return chain
+        chain, prompt_template = cls.create_chain()
+        cls.chatid_to_chain[chatid] = chain, prompt_template
+        return chain, prompt_template
