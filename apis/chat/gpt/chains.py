@@ -46,6 +46,6 @@ class Chains:
     def get_chain(cls, chatid, retrieval_method, message):
         if chatid in cls.chatid_to_chain:
             return cls.chatid_to_chain[chatid]
-        chain = cls.create_chain(retrieval_method, message)
+        chain = cls.create_chain()
         cls.chatid_to_chain[chatid] = chain
         return chain
