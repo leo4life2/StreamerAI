@@ -7,10 +7,11 @@ vectorstore = Pinecone(settings.PINECONE_INDEX, settings.OPENAI_EMBEDDINGS.embed
 
 def retrieve_with_embedding(message):
     # retrieve top document
+    print("message {}".format(message))
     documents = vectorstore.similarity_search(message, 1)
     if len(documents) > 0:
         return documents[0].page_content, documents[0].metadata['ix']
-    return ''
+    return '', 0
 
 def retrieve_with_prompt(message):
     # handwritten human summaries to file
