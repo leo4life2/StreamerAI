@@ -1,7 +1,7 @@
 from langchain import LLMChain, PromptTemplate
 from langchain.llms import OpenAIChat
 from langchain.memory import ConversationBufferWindowMemory
-from .prompt import PREFIX, IDSG_CONTEXT
+from .prompt import PREFIX
 from .retrieval import retrieve_with_embedding, retrieve_with_prompt
 
 class Chains:
@@ -29,10 +29,10 @@ class Chains:
             llm=OpenAIChat(model_name="gpt-3.5-turbo", temperature=temperature), 
             prompt=prompt, 
             verbose=verbose, 
-            memory=ConversationBufferWindowMemory(k=3), # only keep the last 3 interactions
+            memory=ConversationBufferWindowMemory(k=3, memory_key="history", input_key="human_input"), # only keep the last 3 interactions
         )
         
-        return chatgpt_chain, prompt
+        return chatgpt_chain
     
     @staticmethod
     def get_idsg_context(retrieval_method, message):
@@ -46,6 +46,6 @@ class Chains:
     def get_chain(cls, chatid):
         if chatid in cls.chatid_to_chain:
             return cls.chatid_to_chain[chatid]
-        chain, prompt_template = cls.create_chain()
-        cls.chatid_to_chain[chatid] = chain, prompt_template
-        return chain, prompt_template
+        chain = cls.create_chain()
+        cls.chatid_to_chain[chatid] = chain
+        return chain

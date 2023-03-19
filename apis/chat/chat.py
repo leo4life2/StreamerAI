@@ -33,18 +33,11 @@ def chat():
     product = data.get('product')
     retrieval_method = data.get('retrieval_method') # assuming FE has an LLM selection toggle
     
-    chain, prompt_template = Chains.get_chain(chatUUID) # each chain w/ its own memory for each chat. Not persistent.
+    chain = Chains.get_chain(chatUUID) # each chain w/ its own memory for each chat. Not persistent.
     
     product_context, ix = Chains.get_idsg_context(retrieval_method, message)
     print("Using Product Context: {}".format(product_context))
-    
-    # prompt = prompt_template.format(product_context=product_context, history=chain.memory.buffer, human_input=message)
-    # response = chain({
-    #     "product_context": product_context,
-    #     "human_input": message
-    # })
     response = chain.predict(human_input=message, product_context=product_context)
-    
     logging.info(f"For chatUUID: {chatUUID}, message: {message}, response: {response}")
     
     return json.jsonify({'message': response}), 200

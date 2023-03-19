@@ -1,7 +1,18 @@
 {
     "version": "0.2.0",
     "configurations": [
-
+        {
+            "name":"Python: Dafuq",
+            "type":"python",
+            "request":"launch",
+            "program":"${file}",
+            "console":"integratedTerminal",
+            "justMyCode":false,
+            "env": {
+                "PINECONE_API_KEY": "8ee080b1-b1b9-4d62-8d56-4c02ffa79a5a",
+                "OPENAI_API_KEY": "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",
+            },
+        },
         {
             "name": "Run Gunicorn",
             "type": "python",
