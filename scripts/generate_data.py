@@ -2,26 +2,26 @@ import logging
 import sys
 import os
 from openpyxl import load_workbook
-from apis.chat.gpt.settings import PINECONE_INDEX, PINECONE_INDEX_NAME, PINECONE_TEXT_KEY, OPENAI_EMBEDDINGS
+# from apis.chat.gpt.settings import PINECONE_INDEX, PINECONE_INDEX_NAME, PINECONE_TEXT_KEY, OPENAI_EMBEDDINGS
 
-# import pinecone
-# from langchain.embeddings.openai import OpenAIEmbeddings
-# from langchain.vectorstores import Pinecone
+import pinecone
+from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain.vectorstores import Pinecone
 
-# PINECONE_API_KEY = os.environ["PINECONE_API_KEY"]
-# PINECONE_ENVIRONMENT = "us-east-1-aws"
-# PINECONE_INDEX_NAME = "langchain-test4"
-# PINECONE_TEXT_KEY = "text"
+PINECONE_API_KEY = os.environ["PINECONE_API_KEY"]
+PINECONE_ENVIRONMENT = "us-east-1-aws"
+PINECONE_INDEX_NAME = "streamerai"
+PINECONE_TEXT_KEY = "text"
 
-# OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
-# OPENAI_EMBEDDINGS = OpenAIEmbeddings()
+OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
+OPENAI_EMBEDDINGS = OpenAIEmbeddings()
 
-# # initialize pinecone
-# pinecone.init(
-#     api_key=PINECONE_API_KEY,
-#     environment=PINECONE_ENVIRONMENT
-# )
-# PINECONE_INDEX = pinecone.Index(PINECONE_INDEX_NAME)
+# initialize pinecone
+pinecone.init(
+    api_key=PINECONE_API_KEY,
+    environment=PINECONE_ENVIRONMENT
+)
+PINECONE_INDEX = pinecone.Index(PINECONE_INDEX_NAME)
 
 # array of texts to ingest
 texts = []
@@ -59,7 +59,10 @@ vectorstore = Pinecone.from_existing_index(
 )
 
 if len(texts) > 0:
-    vectorstore.add_texts(texts)
+    vectorstore.add_texts(
+        texts,
+        metadatas
+    )
     print("initialized pinecone and added texts")
 else:
     print("no texts found")

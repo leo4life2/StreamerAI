@@ -38,7 +38,7 @@ def chat():
     product_context, ix = Chains.get_idsg_context(retrieval_method, message)
     print("Using Product Context: {}".format(product_context))
     other_products = Chains.get_product_list_text(message)
-    print("Using Other Products: {}".format(other_products)")
+    print("Using Other Products: {}".format(other_products))
     
     response = chain.predict(human_input=message, product_context=product_context, other_available_products=other_products)
     logging.info(f"For chatUUID: {chatUUID}, message: {message}, response: {response}")
