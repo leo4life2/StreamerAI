@@ -31,7 +31,7 @@ def chat():
     message = data.get('message')
     chatUUID = data.get('conversationIdentifier')
     product = data.get('product')
-    retrieval_method = data.get('retrieval_method') # assuming FE has an LLM selection toggle
+    retrieval_method = data.get('retrievalMethod')
     
     chain = Chains.get_chain(chatUUID) # each chain w/ its own memory for each chat. Not persistent.
     
@@ -41,6 +41,6 @@ def chat():
     print("Using Other Products: {}".format(other_products))
     
     response = chain.predict(human_input=message, product_context=product_context, other_available_products=other_products)
-    logging.info(f"For chatUUID: {chatUUID}, message: {message}, response: {response}")
+    logging.info(f'\nFor chatUUID: {chatUUID}, message: {message}, response: {response}, retrieval_method: {retrieval_method}')
     
     return json.jsonify({'message': response}), 200

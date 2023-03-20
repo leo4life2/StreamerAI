@@ -13,7 +13,7 @@ while True:
         json={
             "message": message,
             "conversationIdentifier": uuid_string,
-            "retrieval_method": "embedding_retrieval"
+            "retrievalMethod": "embedding_retrieval"
         }
     )
     print(response.json())
