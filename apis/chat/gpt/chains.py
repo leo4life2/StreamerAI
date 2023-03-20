@@ -2,7 +2,7 @@ from langchain import LLMChain, PromptTemplate
 from langchain.llms import OpenAIChat
 from langchain.memory import ConversationBufferWindowMemory
 from .prompt import PREFIX
-from .retrieval import retrieve_with_embedding, retrieve_with_prompt
+from .retrieval import retrieve_with_embedding, retrieve_with_prompt, retrieve_top_product_names_with_embedding
 
 class Chains:
     chatid_to_chain = {}
@@ -13,6 +13,9 @@ class Chains:
         template = PREFIX + """
         Product Information:
         {product_context}
+
+        Other Available Products:
+        {other_available_products}
         
         Chat History:
         {history}
@@ -21,7 +24,7 @@ class Chains:
         Assistant:"""
 
         prompt = PromptTemplate(
-            input_variables=["history", "human_input", "product_context"], 
+            input_variables=["history", "human_input", "product_context", "other_available_products"], 
             template=template
         )
 
@@ -41,6 +44,10 @@ class Chains:
         if retrieval_method == 'prompt_retrieval':
             return retrieve_with_prompt(message)
         return retrieve_with_embedding(message)
+    
+    @staticmethod
+    def get_product_list_text(message):
+        return '\n'.join(retrieve_top_product_names_with_embedding(message))
 
     @classmethod
     def get_chain(cls, chatid):

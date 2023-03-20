@@ -1,9 +1,54 @@
 from langchain.vectorstores import Pinecone
 from langchain import PromptTemplate, LLMChain, OpenAI
-from apis.chat.gpt import settings
+from openpyxl import load_workbook
+# from apis.chat.gpt import settings
+import settings
 import os
 
 vectorstore = Pinecone(settings.PINECONE_INDEX, settings.OPENAI_EMBEDDINGS.embed_query, settings.PINECONE_TEXT_KEY)
+
+def get_product_description(worksheet):
+    label_value_tuples = []
+    for row_num in range(1, 1000):
+        label_cell = worksheet["A" + str(row_num)]
+        value_cell = worksheet["B" + str(row_num)]
+        if label_cell.value == None or value_cell.value == None:
+            break
+        label_value_tuple = str(label_cell.value) + ": " + str(value_cell.value)
+        label_value_tuples.append(label_value_tuple)
+
+    # join the tuples together w/ newlines to form text
+    text = "\n".join(label_value_tuples)
+    print("get_product_description returned: {}".format(text))
+    return text
+
+def get_product_name(worksheet):
+    value_cell = worksheet["B1"]
+    if value_cell.value == None:
+        return ""
+    return str(value_cell.value)
+
+def get_worksheet_with_index(index):
+    workbook = load_workbook(filename = "../apis/chat/gpt/data/data.xlsx")
+    return workbook.worksheets[index]
+
+def retrieve_top_product_names_with_embedding(message, k=10):
+    documents = vectorstore.similarity_search(message, k)
+    if len(documents) == 0:
+        return []
+    print("found documents: {}".format(len(documents)))
+
+    results = []
+    for document in documents:
+        index = document.metadata['index']
+        print("found index: {}".format(index))
+        if index:
+            worksheet = get_worksheet_with_index(index)
+            name = get_product_name(worksheet)
+            results.append(name)
+            print("found name: {}".format(name))
+
+    return results
 
 def retrieve_with_embedding(message):
     # retrieve top document
