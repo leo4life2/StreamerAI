@@ -4,7 +4,7 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 
 PINECONE_API_KEY = os.environ["PINECONE_API_KEY"]
 PINECONE_ENVIRONMENT = "us-east-1-aws"
-PINECONE_INDEX_NAME = "langchain-test3"
+PINECONE_INDEX_NAME = "streamerai"
 PINECONE_TEXT_KEY = "text"
 
 # initialize pinecone
