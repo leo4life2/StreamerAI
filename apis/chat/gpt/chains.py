@@ -1,7 +1,6 @@
 from langchain import LLMChain, PromptTemplate
 from langchain.llms import OpenAIChat
 from langchain.memory import ConversationBufferWindowMemory
-from .prompt import PREFIX
 from .retrieval import retrieve_with_embedding, retrieve_top_product_names_with_embedding
 
 class Chains:

@@ -18,7 +18,6 @@ def get_product_description(worksheet):
 
     # join the tuples together w/ newlines to form text
     text = "\n".join(label_value_tuples)
-    print("get_product_description returned: {}".format(text))
     return text
 
 def get_product_name(worksheet):
@@ -52,5 +51,9 @@ def retrieve_with_embedding(message):
     print("message {}".format(message))
     documents = vectorstore.similarity_search(message, 1)
     if len(documents) > 0:
-        return documents[0].page_content, documents[0].metadata['index']
+        document = documents[0]
+        index = int(document.metadata['index'])
+        worksheet = get_worksheet_with_index(index)
+        desc = get_product_description(worksheet)
+        return desc, index
     return '', 0
