@@ -2,19 +2,7 @@ import logging
 import sys
 import os
 from openpyxl import load_workbook
-# from apis.chat.gpt.settings import PINECONE_INDEX, PINECONE_INDEX_NAME, PINECONE_TEXT_KEY, OPENAI_EMBEDDINGS
-
-import pinecone
-from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.vectorstores import Pinecone
-
-PINECONE_API_KEY = os.environ["PINECONE_API_KEY"]
-PINECONE_ENVIRONMENT = "us-east-1-aws"
-PINECONE_INDEX_NAME = "streamerai"
-PINECONE_TEXT_KEY = "text"
-
-OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
-OPENAI_EMBEDDINGS = OpenAIEmbeddings()
+from apis.chat.gpt.settings import PINECONE_INDEX, PINECONE_INDEX_NAME, PINECONE_TEXT_KEY, OPENAI_EMBEDDINGS
 
 # initialize pinecone
 pinecone.init(

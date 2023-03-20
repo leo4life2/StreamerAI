@@ -2,7 +2,6 @@ from langchain.vectorstores import Pinecone
 from langchain import PromptTemplate, LLMChain, OpenAI
 from openpyxl import load_workbook
 from apis.chat.gpt import settings
-# import settings
 import os
 
 vectorstore = Pinecone(settings.PINECONE_INDEX, settings.OPENAI_EMBEDDINGS.embed_query, settings.PINECONE_TEXT_KEY)
