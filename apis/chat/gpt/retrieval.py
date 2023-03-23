@@ -28,7 +28,12 @@ def get_product_name(worksheet):
     return name.replace("\n", "")
 
 def get_worksheet_with_index(index):
-    workbook = load_workbook(filename = "./apis/chat/gpt/data/data.xlsx")
+    # Get the absolute path of the directory containing the current script
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+
+    # Join the directory path with the relative path to the Excel file
+    file_path = os.path.join(dir_path, 'data', 'data.xlsx')
+    workbook = load_workbook(filename = file_path)
     return workbook.worksheets[index]
 
 def retrieve_top_product_names_with_embedding(message, k=10):
@@ -47,13 +52,22 @@ def retrieve_top_product_names_with_embedding(message, k=10):
     return results
 
 def retrieve_with_embedding(message):
+    """Returns the most relevant product description for the given message.
+
+    Args:
+        message (str): the message to retrieve the product description for
+
+    Returns:
+        str: the product description
+        int: the index of the product
+        float: the similarity score
+    """
     # retrieve top document
-    print("message {}".format(message))
-    documents = vectorstore.similarity_search(message, 1)
-    if len(documents) > 0:
-        document = documents[0]
+    res = vectorstore.similarity_search_with_score(message, 1)[0]
+    if len(res) > 0:
+        document, score = res[0], res[1]
         index = int(document.metadata['index'])
         worksheet = get_worksheet_with_index(index)
         desc = get_product_description(worksheet)
-        return desc, index
-    return '', 0
+        return desc, int(index), score
+    return '', 0, 0

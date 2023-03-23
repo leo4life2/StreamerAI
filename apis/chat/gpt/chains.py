@@ -2,21 +2,22 @@ from langchain import LLMChain, PromptTemplate
 from langchain.llms import OpenAIChat
 from langchain.memory import ConversationBufferWindowMemory
 from .retrieval import retrieve_with_embedding, retrieve_top_product_names_with_embedding
+from .settings import PRODUCT_CONTEXT_SWITCH_SIMILARITY_THRESHOLD
+import logging
 
 class Chains:
-    chatid_to_chain = {}
+    chatid_to_chain_prevcontext = {}
     
     @classmethod
     def create_chain(cls, temperature=0.0, verbose=False):
 
         template = """
         You are an AI-powered sales assistant who is well-versed in the features and benefits of the product you are selling.
-        You have a deep understanding of the Chinese language and can communicate with potential customers in a clear and confident manner.
         Your goal is to help customers understand how the product can solve their problems and meet their needs, and to convince them that it is the best solution available.
         With your expertise and knowledge, you can provide personalized recommendations and address any concerns or objections that customers may have, ultimately closing the deal and generating sales for the company.
 
         Use the information in "Product Information" to answer a user's question about a specific product. If a user asks about available products, use the information in "Other Available Products".
-        If you are given a question unrelated to the product or list of other available products, you should respond saying that you are only capable of answering questions about available products.
+        If you are given a question unrelated to health or the product or list of other available products, you should respond saying that you are only capable of answering questions about available products.
         However, you are also a health and nutrition expert, so you can answer questions related to these fields. Try to answer your questions in Chinese as much as possible.
 
         Product Information:
@@ -46,19 +47,33 @@ class Chains:
         return chatgpt_chain
     
     @staticmethod
-    def get_idsg_context(retrieval_method, message):
-        if retrieval_method == 'embedding_retrieval':
-            return retrieve_with_embedding(message)
-        return retrieve_with_embedding(message)
+    def get_idsg_context(retrieval_method, message, prev_context):
+        # Currently only using embedding retrieval no matter what
+        descr, ix, score = retrieve_with_embedding(message)
+        logging.info(f"Score is {score}")
+        if prev_context and score < PRODUCT_CONTEXT_SWITCH_SIMILARITY_THRESHOLD:
+            logging.info("Using old context")
+            return prev_context, ix
+        return descr, ix
     
     @staticmethod
     def get_product_list_text(message):
         return '\n'.join(retrieve_top_product_names_with_embedding(message))
 
     @classmethod
-    def get_chain(cls, chatid):
-        if chatid in cls.chatid_to_chain:
-            return cls.chatid_to_chain[chatid]
-        chain = cls.create_chain()
-        cls.chatid_to_chain[chatid] = chain
-        return chain
+    def get_chain_prevcontext(cls, chatid):
+        """Returns the chain and previous product context for the given chatid.
+        If the chain does not exist, it creates a new one.
+
+        Args:
+            chatid (string): the chat uuid
+
+        Returns:
+            LLMChain: the chain
+            str: the previous product context
+        """
+        if chatid not in cls.chatid_to_chain_prevcontext:
+            chain = cls.create_chain()
+            cls.chatid_to_chain_prevcontext[chatid] = (chain, '')
+            
+        return cls.chatid_to_chain_prevcontext[chatid]

@@ -2,6 +2,8 @@ import os
 import pinecone
 from langchain.embeddings.openai import OpenAIEmbeddings
 
+PRODUCT_CONTEXT_SWITCH_SIMILARITY_THRESHOLD = 0.78
+
 PINECONE_API_KEY = os.environ["PINECONE_API_KEY"]
 PINECONE_ENVIRONMENT = "us-east-1-aws"
 PINECONE_INDEX_NAME = "streamerai"
