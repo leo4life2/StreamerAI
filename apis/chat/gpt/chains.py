@@ -19,6 +19,7 @@ class Chains:
         Use the information in "Product Information" to answer a user's question about a specific product. If a user asks about available products, use the information in "Other Available Products".
         If you are given a question unrelated to health or the product or list of other available products, you should respond saying that you are only capable of answering questions about available products.
         However, you are also a health and nutrition expert, so you can answer questions related to these fields. Try to answer your questions in Chinese as much as possible.
+        If you are unsure about what product the user is referring to, or if the product information given doesn't seem to match the user's question, ask the user a follow up question to clarify.
 
         Product Information:
         {product_context}
