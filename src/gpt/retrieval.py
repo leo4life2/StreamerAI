@@ -1,10 +1,10 @@
 from langchain.vectorstores import Pinecone
 from langchain import PromptTemplate, LLMChain, OpenAI
 from openpyxl import load_workbook
-from apis.chat.gpt import settings
+from .settings import PINECONE_INDEX, OPENAI_EMBEDDINGS, PINECONE_TEXT_KEY
 import os
 
-vectorstore = Pinecone(settings.PINECONE_INDEX, settings.OPENAI_EMBEDDINGS.embed_query, settings.PINECONE_TEXT_KEY)
+vectorstore = Pinecone(PINECONE_INDEX, OPENAI_EMBEDDINGS.embed_query, PINECONE_TEXT_KEY)
 
 def get_product_description(worksheet):
     label_value_tuples = []
