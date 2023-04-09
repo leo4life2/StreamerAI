@@ -1,0 +1,11 @@
+this is a sample script. newlines indicate the end of a paragraph
+
+a single paragraph with just {question} will mean the bot should answer questions that were asked
+
+
+
+{question}
+
+you can have as many newlines as you want between paragraphs
+
+eventually, we should convert this to some more structured format like JSON

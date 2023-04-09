@@ -1,5 +1,5 @@
 from flask import Blueprint, session, request, json, current_app
-from .gpt.chains import Chains
+from ..gpt.chains import Chains
 import base64
 import logging
 
