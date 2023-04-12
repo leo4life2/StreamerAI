@@ -2,6 +2,6 @@
 def script_for_product_index(product_index):
     filename = "./src/gpt/product_scripts/{}.txt".format(product_index)
     print("using filename: {}".format(filename))
-    file = open(filename, "r")
+    file = open(filename, "r", encoding='utf-8')
     data = file.read()
     return [paragraph for paragraph in data.split("\n") if paragraph != '']

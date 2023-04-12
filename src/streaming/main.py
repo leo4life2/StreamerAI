@@ -8,6 +8,7 @@ import uuid
 import signal
 import pyttsx3
 import argparse
+import platform
 from .database import initialize_table, query_comments, mark_comments_as_read
 from .settings import DATBASE_PATH, QUESTION_ANSWERING_SCRIPT_PLACEHOLDER
 from ..gpt.chains import Chains
@@ -18,6 +19,7 @@ TODOs:
 - can we get username for comments?
 - can we add timestamp for comments?
 - consider looping through all products instead of just picking 1
+- current product retrieval should have "prev_context" of the current product, so that we have to be really confident to switch away
 """
 
 # parse arguments
@@ -53,7 +55,16 @@ logging.info("loaded script: {}".format(script))
 
 # initialize TTS engine - eventually we should use a different one
 engine = pyttsx3.init()
-engine.setProperty("voice", "com.apple.speech.synthesis.voice.mei-jia")
+if platform.system() == 'Windows':
+    voices = engine.getProperty('voices')
+    for voice in voices:
+        if 'CN' in voice.id:
+            engine.setProperty("voice", voice.id)
+            logging.info("pyttsx3 using voice {voice.id}")
+            break
+else:
+    engine.setProperty("voice", "com.apple.speech.synthesis.voice.mei-jia")
+    logging.info("pyttsx3 using voice com.apple.speech.synthesis.voice.mei-jia")
 
 # start main runloop
 while True:
