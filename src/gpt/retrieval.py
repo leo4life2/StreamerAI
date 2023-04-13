@@ -36,6 +36,11 @@ def get_worksheet_with_index(index):
     workbook = load_workbook(filename = file_path)
     return workbook.worksheets[index]
 
+def get_product_description_with_index(index):
+    worksheet = get_worksheet_with_index(index)
+    desc = get_product_description(worksheet)
+    return desc
+
 def retrieve_top_product_names_with_embedding(message, k=10):
     documents = vectorstore.similarity_search(message, k)
     if len(documents) == 0:

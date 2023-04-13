@@ -12,19 +12,17 @@ import platform
 from .database import initialize_table, query_comments, mark_comments_as_read
 from .settings import DATBASE_PATH, QUESTION_ANSWERING_SCRIPT_PLACEHOLDER
 from ..gpt.chains import Chains
-from ..gpt.scripts import script_for_product_index
+from ..gpt.scripts import fetch_scripts
+from ..gpt.retrieval import get_product_description_with_index
 
 """
 TODOs:
 - can we get username for comments?
 - can we add timestamp for comments?
-- consider looping through all products instead of just picking 1
-- current product retrieval should have "prev_context" of the current product, so that we have to be really confident to switch away
 """
 
 # parse arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('--product_index', type=int, required=True, help='')
 parser.add_argument('--room_id', type=str, required=True, help='')
 parser.add_argument('--live', action='store_true', help='')
 args = parser.parse_args()
@@ -48,10 +46,8 @@ if args.live:
     process = subprocess.Popen(comments_command, stdout=subprocess.PIPE)
     subprocesses.append(process)
 
-# grab script based on product index
-# TODO: we can loop through all products or make some interesting transition
-script = script_for_product_index(args.product_index)
-logging.info("loaded script: {}".format(script))
+scripts = fetch_scripts()
+logging.info("testing scripts: {}".format(scripts))
 
 # initialize TTS engine - eventually we should use a different one
 engine = pyttsx3.init()
@@ -66,56 +62,101 @@ else:
     engine.setProperty("voice", "com.apple.speech.synthesis.voice.mei-jia")
     logging.info("pyttsx3 using voice com.apple.speech.synthesis.voice.mei-jia")
 
-# start main runloop
 while True:
-    for paragraph in script:
-        logging.info("processing script paragraph: {}".format(paragraph))
-        if paragraph == QUESTION_ANSWERING_SCRIPT_PLACEHOLDER:
-            # consider answering comments here
-            comment_results = query_comments(connection, args.room_id)
-            logging.info("query for comments: {}".format(comment_results))
+    # consider answering comments here
+    comment_results = query_comments(connection, args.room_id)
+    logging.info("query for comments: {}".format(comment_results))
 
-            read_comments = []
-            for comment in comment_results:
-                id = comment[0]
-                username = comment[1]
-                text = comment[2]
+    read_comments = []
+    for comment in comment_results:
+        id = comment[0]
+        username = comment[1]
+        text = comment[2]
 
-                logging.info(f"processing comment: {text}")
+        logging.info(f"processing comment: {text}")
 
-                # always grab new chain, prev_context should always be '' here
-                chain, prev_context = Chains.get_chain_prevcontext(str(uuid.uuid4()))
+        chain = Chains.create_chain()
 
-                # grab relevant product context
-                product_context, ix = Chains.get_idsg_context('', text, '')
-                logging.info(f"using product context:\n{product_context}")
+        product_context, ix = Chains.get_idsg_context('retrieve_with_embedding', text, None)
+        logging.info(f"using product context:\n{product_context}")
 
-                other_products = Chains.get_product_list_text(text)
-                other_products_printable = other_products.replace(', ', ',\n')
-                logging.info(f"using other products:\n{other_products}")
+        other_products = Chains.get_product_list_text(text)
+        other_products_printable = other_products.replace(', ', ',\n')
+        logging.info(f"using other products:\n{other_products}")
 
-                response = chain.predict(
-                    human_input=text,
-                    product_context=product_context,
-                    other_available_products=other_products
-                )
-                logging.info(
-                    f"Chat Details:\n"
-                    f"Message: {text}\n"
-                    f"Response: {response}\n"
-                )
+        response = chain.predict(
+            human_input=text,
+            product_context=product_context,
+            other_available_products=other_products
+        )
+        logging.info(
+            f"Chat Details:\n"
+            f"Message: {text}\n"
+            f"Response: {response}\n"
+        )
 
-                engine.say(response)
-                engine.runAndWait()
+        engine.say(response)
+        engine.runAndWait()
 
-                read_comments.append(id)
+        read_comments.append(id)
 
-            mark_comments_as_read(connection, read_comments)
-            logging.info("marked comment ids as read: {}".format(read_comments))
-            
-        else:
-            engine.say(paragraph)
-            engine.runAndWait()
+    mark_comments_as_read(connection, read_comments)
+    logging.info("marked comment ids as read: {}".format(read_comments))
 
-    logging.info("finished script, restarting from beginning...")
     time.sleep(1)
+
+# # start main runloop
+# while True:
+#     for product_index, paragraphs in enumerate(scripts):
+#         for paragraph in paragraphs:
+#             logging.info("processing script paragraph: {}".format(paragraph))
+#             if paragraph == QUESTION_ANSWERING_SCRIPT_PLACEHOLDER:
+#                 # consider answering comments here
+#                 comment_results = query_comments(connection, args.room_id)
+#                 logging.info("query for comments: {}".format(comment_results))
+
+#                 read_comments = []
+#                 for comment in comment_results:
+#                     id = comment[0]
+#                     username = comment[1]
+#                     text = comment[2]
+
+#                     logging.info(f"processing comment: {text}")
+
+#                     chain = Chains.create_chain()
+
+#                     # set "prev_context" to be the current product that the bot is describing
+#                     prev_context = get_product_description_with_index(product_index)
+
+#                     # grab product context - we must be sufficiently confident before switching away from "prev_context", aka the current product
+#                     product_context, ix = Chains.get_idsg_context('retrieve_with_embedding', text, prev_context)
+#                     logging.info(f"using product context:\n{product_context}")
+
+#                     other_products = Chains.get_product_list_text(text)
+#                     other_products_printable = other_products.replace(', ', ',\n')
+#                     logging.info(f"using other products:\n{other_products}")
+
+#                     response = chain.predict(
+#                         human_input=text,
+#                         product_context=product_context,
+#                         other_available_products=other_products
+#                     )
+#                     logging.info(
+#                         f"Chat Details:\n"
+#                         f"Message: {text}\n"
+#                         f"Response: {response}\n"
+#                     )
+
+#                     engine.say(response)
+#                     engine.runAndWait()
+
+#                     read_comments.append(id)
+
+#                 mark_comments_as_read(connection, read_comments)
+#                 logging.info("marked comment ids as read: {}".format(read_comments))
+#             else:
+#                 engine.say(paragraph)
+#                 engine.runAndWait()
+
+#     logging.info("finished script, restarting from beginning...")
+#     time.sleep(1)

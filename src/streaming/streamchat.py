@@ -22,10 +22,15 @@ def poll_latest_comments():
         logging.info("fetching existing stream cursor for room_id: {}, existing cursor: {}".format(room_id, past_cursor))
 
         messages, cursor = fetch_comments(room_id, past_cursor)
-        logging.info("got new comments for room_id: {}, messages: {}, cursor: {}".format(room_id, messages, cursor))    
+        logging.info("got new comments for room_id: {}, messages count: {}, cursor: {}".format(room_id, len(messages), cursor))    
 
         for message in messages:
-            add_comment(connection, room_id, "test_username", message)
+            if is_question(message):
+                logging.info("saving new message that is a question: {}")
+                logging.info("got new comments for room_id: {}, messages: {}, cursor: {}".format(room_id, messages, cursor))
+                add_comment(connection, room_id, "test_username", message)
+            else:
+                continue
 
         save_stream_cursor(connection, room_id, str(cursor))
         logging.info("saving new stream cursor for room_id: {}, new cursor: {}".format(room_id, cursor))
