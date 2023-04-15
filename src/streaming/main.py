@@ -6,11 +6,11 @@ import time
 import os
 import uuid
 import signal
-import pyttsx3
 import argparse
 import platform
 from .database import initialize_table, query_comments, mark_comments_as_read
 from .settings import DATBASE_PATH, QUESTION_ANSWERING_SCRIPT_PLACEHOLDER
+from .tts import tts
 from ..gpt.chains import Chains
 from ..gpt.scripts import fetch_scripts
 from ..gpt.retrieval import get_product_description_with_index
@@ -49,19 +49,6 @@ if args.live:
 scripts = fetch_scripts()
 logging.info("testing scripts: {}".format(scripts))
 
-# initialize TTS engine - eventually we should use a different one
-engine = pyttsx3.init()
-if platform.system() == 'Windows':
-    voices = engine.getProperty('voices')
-    for voice in voices:
-        if 'CN' in voice.id:
-            engine.setProperty("voice", voice.id)
-            logging.info("pyttsx3 using voice {voice.id}")
-            break
-else:
-    engine.setProperty("voice", "com.apple.speech.synthesis.voice.mei-jia")
-    logging.info("pyttsx3 using voice com.apple.speech.synthesis.voice.mei-jia")
-
 while True:
     # consider answering comments here
     comment_results = query_comments(connection, args.room_id)
@@ -94,9 +81,10 @@ while True:
             f"Message: {text}\n"
             f"Response: {response}\n"
         )
-
-        engine.say(response)
-        engine.runAndWait()
+        
+        # TTS
+        time_taken = tts(response)
+        logging.info(f"Time taken for TTS: {time_taken} seconds")
 
         read_comments.append(id)
 
