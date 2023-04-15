@@ -1,10 +1,10 @@
 from langchain.vectorstores import Pinecone
 from langchain import PromptTemplate, LLMChain, OpenAI
 from openpyxl import load_workbook
-from apis.chat.gpt import settings
+from .settings import PINECONE_INDEX, OPENAI_EMBEDDINGS, PINECONE_TEXT_KEY
 import os
 
-vectorstore = Pinecone(settings.PINECONE_INDEX, settings.OPENAI_EMBEDDINGS.embed_query, settings.PINECONE_TEXT_KEY)
+vectorstore = Pinecone(PINECONE_INDEX, OPENAI_EMBEDDINGS.embed_query, PINECONE_TEXT_KEY)
 
 def get_product_description(worksheet):
     label_value_tuples = []
@@ -35,6 +35,11 @@ def get_worksheet_with_index(index):
     file_path = os.path.join(dir_path, 'data', 'data.xlsx')
     workbook = load_workbook(filename = file_path)
     return workbook.worksheets[index]
+
+def get_product_description_with_index(index):
+    worksheet = get_worksheet_with_index(index)
+    desc = get_product_description(worksheet)
+    return desc
 
 def retrieve_top_product_names_with_embedding(message, k=10):
     documents = vectorstore.similarity_search(message, k)

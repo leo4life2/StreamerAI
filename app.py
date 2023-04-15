@@ -1,8 +1,8 @@
 import os
 from flask import Flask
 from flask_cors import CORS
-from apis.chat.chat import chat_bp
-from apis.login import login_bp
+from src.apis.chat import chat_bp
+from src.apis.login import login_bp
 import logging
 logging.basicConfig(level=logging.INFO)
 
