@@ -54,7 +54,8 @@ class MyHandler(blivedm.BaseHandler):
     async def _on_danmaku(self, client: blivedm.BLiveClient, message: blivedm.DanmakuMessage):
         print(f'[{client.room_id}] {message.uname}：{message.msg}')
         
-        if not is_question(message.msg):
+        # if not is_question(message.msg):
+        if len(message.msg) < 5:
             logging.info("[BILI] not adding new comment because it's not a question")
             return
         
