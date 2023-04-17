@@ -3,26 +3,32 @@ import base64
 import time
 import pygame
 import tempfile
-from .settings import TTS_ACCESS_TOKEN
 import uuid
+import os
+from .settings import TTS_ACCESS_TOKEN
 
 pygame.mixer.init()  # Initialize the mixer once at the beginning
 
 def play_base64_audio(b64_audio):
-    audio_data = base64.b64decode(b64_audio)
+    # Create a temporary file
+    file_descriptor, temp_file_path = tempfile.mkstemp(suffix=".mp3")
 
-    with tempfile.NamedTemporaryFile(suffix=".mp3", delete=True) as temp_audio_file:
-        temp_audio_file.write(audio_data)
-        temp_audio_file.flush()
+    # Write the base64 decoded content to the temporary file
+    with os.fdopen(file_descriptor, "wb") as temp_file:
+        temp_file.write(base64.b64decode(b64_audio))
+        temp_file.close()
 
-        pygame.mixer.music.load(temp_audio_file.name)
-        pygame.mixer.music.play()
+    # Load the temporary file in pygame.mixer
+    pygame.mixer.music.load(temp_file_path)
+    pygame.mixer.music.play()
 
-        while pygame.mixer.music.get_busy():
-            pygame.time.Clock().tick(10)
+    # Wait for the audio to finish playing
+    while pygame.mixer.music.get_busy():
+        pygame.time.Clock().tick(10)
 
-        pygame.mixer.music.stop()
-        pygame.mixer.music.unload()
+    # Stop the playback and delete the temporary file
+    pygame.mixer.music.unload()
+    os.remove(temp_file_path)
 
 
 def tts(text, voice_type='BV700_streaming', style_name='happy'):
