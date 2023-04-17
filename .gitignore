@@ -10,6 +10,9 @@ __pycache__/
 # C extensions
 *.so
 
+# Comment DB
+test.db
+
 # Distribution / packaging
 .Python
 build/
