@@ -24,6 +24,8 @@ TODOs:
 # parse arguments
 parser = argparse.ArgumentParser()
 parser.add_argument('--room_id', type=str, required=True, help='')
+parser.add_argument('--voice_type', type=str, help='')
+parser.add_argument('--voice_style', type=str, help='')
 parser.add_argument('--live', action='store_true', help='')
 args = parser.parse_args()
 
@@ -83,7 +85,13 @@ while True:
         )
         
         # TTS
-        time_taken = tts(response)
+        if args.voice_type and args.voice_style:
+            time_taken = tts(response, voice_type=args.voice_type, style_name=args.voice_style)
+        elif args.voice_type:
+            time_taken = tts(response, voice_type=args.voice_type)
+        else:
+            time_taken = tts(response)
+            
         logging.info(f"Time taken for TTS: {time_taken} seconds")
 
         read_comments.append(id)

@@ -57,7 +57,6 @@ def tts(text, voice_type='BV700_streaming', style_name='happy'):
             'speed_ratio': 1.0,
             'volume_ratio': 1.0,
             'pitch_ratio': 1.0,
-            'style_name': style_name,
         },
         'request': {
             'reqid': uuid.uuid4().hex, # unique for each request, could use for caching later on.
@@ -69,6 +68,9 @@ def tts(text, voice_type='BV700_streaming', style_name='happy'):
             'frontend_type': 'unitTson',
         },
     }
+    
+    if style_name:
+        json_data['audio']['style_name'] = style_name
     
     start = time.time()
     response = requests.post('https://openspeech.bytedance.com/api/v1/tts', headers=headers, json=json_data)
