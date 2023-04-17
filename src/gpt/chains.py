@@ -1,9 +1,10 @@
+import logging
 from langchain import LLMChain, PromptTemplate
 from langchain.llms import OpenAIChat
 from langchain.memory import ConversationBufferWindowMemory
+from tenacity import retry, wait_random_exponential, stop_after_attempt
 from .retrieval import retrieve_with_embedding, retrieve_top_product_names_with_embedding
 from .settings import PRODUCT_CONTEXT_SWITCH_SIMILARITY_THRESHOLD
-import logging
 
 class Chains:
     chatid_to_chain_prevcontext = {}
@@ -50,6 +51,7 @@ class Chains:
         return chatgpt_chain
     
     @staticmethod
+    @retry(wait=wait_random_exponential(min=1, max=20), stop=stop_after_attempt(3))
     def get_idsg_context(retrieval_method, message, prev_context):
         # Currently only using embedding retrieval no matter what
         descr, ix, score = retrieve_with_embedding(message)
