@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./streamerai.png" alt="AI" width="60%" />
+</p>
+
 # StreamerAI
 
 StreamerAI is a Python-based application that allows users to engage with an AI-powered streaming assistant. The application can fetch product scripts, answer comments, and handle text-to-speech (TTS) functionalities. It utilizes SQLite for database management, GPT-based models for answering questions, and TTS services for speech synthesis.
