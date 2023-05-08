@@ -53,7 +53,7 @@ class ExcelWorkbook:
         Returns:
             str: the description of the product
         """
-        worksheet = self.get_worksheet_with_index(index)
+        worksheet = self.worksheets()[index]
         desc = self.get_product_description(worksheet)
         return desc
     

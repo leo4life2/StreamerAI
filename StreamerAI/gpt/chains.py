@@ -76,15 +76,15 @@ class Chains:
 
         Returns:
             str: the product context
-            int: the product index
+            str: the product name
         """
         # Currently only using embedding retrieval no matter what
-        descr, ix, score = cls.retrieval.retrieve_with_embedding(message)
+        descr, name, score = cls.retrieval.retrieve_with_embedding(message)
         logging.info(f"Score is {score}")
         if prev_context and score < PRODUCT_CONTEXT_SWITCH_SIMILARITY_THRESHOLD:
             logging.info("Using old context")
-            return prev_context, ix
-        return descr, ix
+            return prev_context, name
+        return descr, name
     
     @classmethod
     def get_product_list_text(cls, message):

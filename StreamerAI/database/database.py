@@ -26,10 +26,11 @@ class StreamCommentsDB:
             """
             CREATE TABLE IF NOT EXISTS products (
                 name TEXT PRIMARY KEY, /* name of the product */
-                description TEXT NOT NULL /* description of the product, FAQs, etc. will be directly injected into the prompt */
+                description TEXT NOT NULL, /* description of the product, FAQs, etc. will be directly injected into the prompt for FAQ */
+                script TEXT NOT NULL
             );
             """
-            # we can consider separating description into multiple columns - get this working for now
+            # we can consider separating script,description,etc into multiple columns or tables
         )
         cursor.execute(
             """
@@ -39,13 +40,48 @@ class StreamCommentsDB:
             );
             """
         )
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS assets (
+                name TEXT PRIMARY KEY, /* name of the asset (jpg, video, etc...) */
+                extension TEXT NOT NULL, /* filetype extension of the asset */
+                product_name TEXT NOT NULL, /* the name of the product from the products table */
+                asset BLOB NOT NULL, /* the actual asset data blob */
+                FOREIGN KEY(product_name) REFERENCES products(name)
+            )
+            """
+        )
         connection.commit()
 
     @staticmethod
-    def add_product(connection, name, description):
+    def add_asset(connection, product_name, asset_name, asset_extension, asset):
+        """Adds a new asset used in scripting"""
+        if len(StreamCommentsDB.product_description_for_name(connection, product_name)) == 0:
+            return
+
+        cursor = connection.cursor()
+        cursor.execute("INSERT INTO assets (name, extension, product_name, asset) VALUES (?, ?, ?, ?)", (asset_name, asset_extension, product_name, asset))
+        connection.commit()
+    
+    @staticmethod
+    def get_asset(connection, product_name, asset_name):
+        """asdf"""
+        cursor = connection.cursor()
+        cursor.execute("SELECT asset FROM assets WHERE name = ? AND product_name = ?", (asset_name, product_name))
+        return cursor.fetchAll()
+    
+    @staticmethod
+    def remove_asset(connection, product_name, asset_name):
+        """asdf"""
+        cursor = connection.cursor()
+        cursor.execute("DELETE FROM assets WHERE name = ? AND product_name = ?", (asset_name, product_name))
+        connection.commit()
+
+    @staticmethod
+    def add_product(connection, name, description, script):
         """Add a new product"""
         cursor = connection.cursor()
-        cursor.execute("INSERT INTO products (name, description) VALUES (?, ?)", (name, description))
+        cursor.execute("INSERT INTO products (name, description, script) VALUES (?, ?, ?)", (name, description, script))
         connection.commit()
 
     @staticmethod
@@ -56,10 +92,17 @@ class StreamCommentsDB:
         return cursor.fetchall()
     
     @staticmethod
+    def product_script_for_name(connection, name):
+        """asdf"""
+        cursor = connection.cursor()
+        cursor.execute("SELECT script FROM products WHERE name = ?", (name,))
+        return cursor.fetchall()
+    
+    @staticmethod
     def query_all_products(connection):
         """Returns all registered products"""
         cursor = connection.cursor()
-        cursor.execute("SELECT name, description FROM products")
+        cursor.execute("SELECT name, description, script FROM products")
         return cursor.fetchall()
 
     @staticmethod

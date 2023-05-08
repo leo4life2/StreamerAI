@@ -34,5 +34,4 @@ PINECONE_INDEX = pinecone.Index(PINECONE_INDEX_NAME)
 # OpenAI settings
 OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
 
-# Bootstrap Products file path
-BOOTSTRAP_EXCEL_FILE_PATH = os.path.join(os.path.dirname(__file__), "data", "data.xlsx")
+BOOTSTRAP_DATA_DIRECTORY = os.path.join(os.path.dirname(__file__), "data", "bootstrap_data")
