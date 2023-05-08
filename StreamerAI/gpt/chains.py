@@ -1,10 +1,12 @@
 import logging
+import os
 
 from langchain import LLMChain, PromptTemplate
 from langchain.chat_models import ChatOpenAI
 from langchain.memory import ConversationBufferWindowMemory
 from langchain.embeddings.openai import OpenAIEmbeddings
 from tenacity import retry, wait_random_exponential, stop_after_attempt
+from pathlib import Path
 
 from StreamerAI.settings import PRODUCT_CONTEXT_SWITCH_SIMILARITY_THRESHOLD, PINECONE_INDEX, PINECONE_TEXT_KEY, LLM_NAME
 from StreamerAI.gpt.retrieval import Retrieval
@@ -27,31 +29,12 @@ class Chains:
         Returns:
             LLMChain: the newly created language model chain
         """
-        template = """You are an AI-powered sales assistant who is well-versed in the features and benefits of the product you are selling.
-        Your goal is to help customers understand how the product can solve their problems and meet their needs, and to convince them that it is the best solution available.
-        With your expertise and knowledge, you can provide personalized recommendations and address any concerns or objections that customers may have, ultimately closing the deal and generating sales for the company.
-
-        Use the information in "Product Information" to answer a user's question about a specific product. If a user asks about available products, use the information in "Other Available Products".
-        If you are given a question unrelated to health or the product or list of other available products, you should respond saying that you are only capable of answering questions about available products.
-        However, you are also a health and nutrition expert, so you can answer questions related to these fields. Try to answer your questions in Chinese as much as possible.
-        If you are unsure about what product the user is referring to, or if the product information given doesn't seem to match the user's question, ask the user a follow up question to clarify.
-
-        You must respond to all questions in Chinese, even if the question is in a different language
-
-        Product Information:
-        {product_context}
-
-        Other Available Products:
-        {other_available_products}
-        
-        Chat History:
-        {history}
-
-        Human: {human_input}
-        Assistant:"""
+        cwd = Path.cwd()
+        template_file_path = os.path.join(cwd, "data", "prompt_template.txt")
+        template = open(template_file_path, "r").read()
 
         prompt = PromptTemplate(
-            input_variables=["history", "human_input", "product_context", "other_available_products"],
+            input_variables=["history", "human_input", "product_context", "other_available_products", "audience_name"],
             template=template
         )
 
@@ -66,11 +49,10 @@ class Chains:
 
     @classmethod
     @retry(wait=wait_random_exponential(min=1, max=20), stop=stop_after_attempt(3))
-    def get_idsg_context(cls, retrieval_method, message, prev_context):
+    def get_product_context(cls, message, prev_context):
         """Retrieve product information based on the user's query.
 
         Args:
-            retrieval_method: not currently used
             message (str): the user's query
             prev_context (str): the previous product context
 

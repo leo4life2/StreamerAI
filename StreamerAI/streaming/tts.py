@@ -108,12 +108,12 @@ class TextToSpeech:
         response = requests.post('https://openspeech.bytedance.com/api/v1/tts', headers=headers, json=json_data)
         response_json = response.json()
         
-        b64_audio = response_json['data']
-        self.play_base64_audio(b64_audio)
+        try:
+            b64_audio = response_json['data']
+        except KeyError:
+            raise Exception(f"Errorneous TTS response: {response_json}")
         
         end = time.time()
         
-        # audio_length = response_json['addition']['description']
-        # print(audio_length)
-        
+        self.play_base64_audio(b64_audio)  
         return end - start

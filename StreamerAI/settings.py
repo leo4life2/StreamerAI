@@ -33,4 +33,4 @@ PINECONE_INDEX = pinecone.Index(PINECONE_INDEX_NAME)
 
 # OpenAI settings
 OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
-LLM_NAME = "gpt-4" # gpt-4 or gpt-3.5-turbo
+LLM_NAME = "gpt-3.5-turbo" # gpt-4 or gpt-3.5-turbo

@@ -28,7 +28,7 @@ class FakeHandler(StreamChatBaseHandler):
         past_cursor = StreamCommentsDB.get_stream_cursor(connection, room_id)
         logging.info("[FAKE] fetching existing stream cursor for room_id: {}, existing cursor: {}".format(room_id, past_cursor))
 
-        StreamCommentsDB.add_comment(connection, room_id, "test_username", message)
+        StreamCommentsDB.add_comment(connection, room_id, "大脸猫", message)
         logging.info("[FAKE] adding new comment for room_id: {}".format(room_id))
 
         fake_cursor = str(uuid.uuid4())
