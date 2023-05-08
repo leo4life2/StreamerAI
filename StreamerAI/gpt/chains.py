@@ -6,7 +6,7 @@ from langchain.memory import ConversationBufferWindowMemory
 from langchain.embeddings.openai import OpenAIEmbeddings
 from tenacity import retry, wait_random_exponential, stop_after_attempt
 
-from StreamerAI.settings import PRODUCT_CONTEXT_SWITCH_SIMILARITY_THRESHOLD, PINECONE_INDEX, PINECONE_TEXT_KEY
+from StreamerAI.settings import PRODUCT_CONTEXT_SWITCH_SIMILARITY_THRESHOLD, PINECONE_INDEX, PINECONE_TEXT_KEY, LLM_NAME
 from StreamerAI.gpt.retrieval import Retrieval
 
 
@@ -17,7 +17,7 @@ class Chains:
     retrieval = Retrieval(PINECONE_INDEX, OpenAIEmbeddings(), PINECONE_TEXT_KEY)
     
     @classmethod
-    def create_chain(cls, temperature=0.0, verbose=False):
+    def create_chain(cls, temperature=0.3, verbose=False):
         """Create and return a new language model chain.
 
         Args:
@@ -56,7 +56,7 @@ class Chains:
         )
 
         chatgpt_chain = LLMChain(
-            llm=ChatOpenAI(model_name="gpt-3.5-turbo", temperature=temperature),
+            llm=ChatOpenAI(model_name=LLM_NAME, temperature=temperature),
             prompt=prompt,
             verbose=verbose,
             memory=ConversationBufferWindowMemory(k=3, memory_key="history", input_key="human_input"), # only keep the last 3 interactions
