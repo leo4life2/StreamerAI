@@ -60,7 +60,7 @@ class StreamerAI:
             A list of product scripts.
         """
         top_level_dir = Path.cwd()
-        product_scripts_path = os.path.join(top_level_dir, "data", "product_scripts")
+        product_scripts_path = os.path.join(top_level_dir, "StreamerAI", "data", "product_scripts")
         scripts = []
 
         for filename in sorted(os.listdir(product_scripts_path)):

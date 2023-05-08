@@ -48,11 +48,13 @@ urllib3 = "1.26.15"
 yarl = "1.9.2"
 bilibili-utils = "^0.2"
 blivedm = "0.1.1"
+ipdb = "^0.13.13"
 
 [tool.poetry.scripts]
 start = "StreamerAI.streaming.main:main"
 bili = "StreamerAI.streamchat.bili:main"
 fake = "StreamerAI.streamchat.fake:main"
+bootstrap = "StreamerAI.data.bootstrap:main"
 
 [tool.poetry.group.dev.dependencies]
 httpx = "^0.23.3"

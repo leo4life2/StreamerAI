@@ -7,7 +7,7 @@ import pinecone
 logging.basicConfig(level=logging.INFO)
 
 # Database settings
-DATABASE_PATH = "test.db"
+DATABASE_PATH = os.path.join(os.path.dirname(__file__), "data", "test.db")
 
 # Prompt settings
 QUESTION_ANSWERING_SCRIPT_PLACEHOLDER = "{question}"
@@ -33,3 +33,6 @@ PINECONE_INDEX = pinecone.Index(PINECONE_INDEX_NAME)
 
 # OpenAI settings
 OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
+
+# Bootstrap Products file path
+BOOTSTRAP_EXCEL_FILE_PATH = os.path.join(os.path.dirname(__file__), "data", "data.xlsx")

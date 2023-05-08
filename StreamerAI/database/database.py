@@ -26,8 +26,8 @@ class StreamCommentsDB:
             """
             CREATE TABLE IF NOT EXISTS products (
                 name TEXT PRIMARY KEY, /* name of the product */
-                description TEXT NOT NULL /* description of the product, FAQs, etc. will be directly injected into the prompt *.
-            )
+                description TEXT NOT NULL /* description of the product, FAQs, etc. will be directly injected into the prompt */
+            );
             """
             # we can consider separating description into multiple columns - get this working for now
         )
@@ -36,7 +36,7 @@ class StreamCommentsDB:
             CREATE TABLE IF NOT EXISTS assistants (
                 name TEXT PRIMARY KEY, /* name of the assistant profile */
                 prompt TEXT NOT NULL /* a description/command of how the assistant should behave. this will be directly injected into the prompt */
-            )
+            );
             """
         )
         connection.commit()
@@ -46,7 +46,14 @@ class StreamCommentsDB:
         """Add a new product"""
         cursor = connection.cursor()
         cursor.execute("INSERT INTO products (name, description) VALUES (?, ?)", (name, description))
-        cursor.commit()
+        connection.commit()
+
+    @staticmethod
+    def product_description_for_name(connection, name):
+        """asdf"""
+        cursor = connection.cursor()
+        cursor.execute("SELECT description FROM products WHERE name = ?", (name,))
+        return cursor.fetchall()
     
     @staticmethod
     def query_all_products(connection):
