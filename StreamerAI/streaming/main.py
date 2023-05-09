@@ -19,7 +19,7 @@ class StreamerAI:
     A class that represents a streamer AI, which can fetch scripts, answer comments, and handle text-to-speech.
     """
     
-    def __init__(self, room_id, live=False, voice_type=None, voice_style=None):
+    def __init__(self, room_id, live=False, disable_script=False, voice_type=None, voice_style=None):
         """
         Initializes a new StreamerAI instance.
 
@@ -31,6 +31,7 @@ class StreamerAI:
         """
         self.room_id = room_id
         self.live = live
+        self.disable_script = disable_script
         self.tts_service = TextToSpeech(voice_type=voice_type, style_name=voice_style)
         self.subprocesses = []
         
@@ -138,23 +139,30 @@ class StreamerAI:
         
         return read_comments
 
+    def process_paragraph(self, paragraph):
+        """
+        Processes a single paragraph.
+        """
+        if paragraph == QUESTION_ANSWERING_SCRIPT_PLACEHOLDER or self.disable_script:
+            comment_results = StreamCommentsDB.query_comments(self.connection, self.room_id)
+            logging.info("query for comments: {}".format(comment_results))
+            read_comments = self.process_comments(comment_results)
+            StreamCommentsDB.mark_comments_as_read(self.connection, read_comments)
+            logging.info("marked comment ids as read: {}".format(read_comments))
+
+            time.sleep(1)
+        else:
+            time_taken = self.tts_service.tts(paragraph)
+            logging.info(f"Time taken for TTS request: {time_taken} seconds")
+
     def process_scripts(self, paragraphs):
         """
         Processes a list of paragraphs.
         """
         for paragraph in paragraphs:
             logging.info("processing script paragraph: {}".format(paragraph))
-            if paragraph == QUESTION_ANSWERING_SCRIPT_PLACEHOLDER:
-                comment_results = StreamCommentsDB.query_comments(self.connection, self.room_id)
-                logging.info("query for comments: {}".format(comment_results))
-                read_comments = self.process_comments(comment_results)
-                StreamCommentsDB.mark_comments_as_read(self.connection, read_comments)
-                logging.info("marked comment ids as read: {}".format(read_comments))
+            self.process_paragraph(paragraph)
 
-                time.sleep(1)
-            else:
-                time_taken = self.tts_service.tts(paragraph)
-                logging.info(f"Time taken for TTS request: {time_taken} seconds")
 
     def run(self):
         """
@@ -173,12 +181,14 @@ def main():
     parser.add_argument('--voice_type', type=str, help='Voice type for text-to-speech')
     parser.add_argument('--voice_style', type=str, help='Voice style for text-to-speech')
     parser.add_argument('--live', action='store_true', help='Enable live mode for streaming comments')
+    parser.add_argument('--disable_script', action='store_true', help='Disable script reading mode')
 
     args = parser.parse_args()
 
     product_assistant = StreamerAI(
         room_id=args.room_id,
         live=args.live,
+        disable_script=args.disable_script,
         voice_type=args.voice_type,
         voice_style=args.voice_style
     )

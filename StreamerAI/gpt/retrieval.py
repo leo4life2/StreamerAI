@@ -96,8 +96,9 @@ class Retrieval:
 
         results = []
         for document in documents:
-            index = int(document.metadata['index'])
+            index = document.metadata.get('index')
             if index:
+                index = int(index)
                 worksheet = self.get_worksheet_with_index(index)
                 name = self.get_product_name(worksheet)
                 results.append(name)

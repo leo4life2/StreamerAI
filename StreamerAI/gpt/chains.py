@@ -31,7 +31,7 @@ class Chains:
         """
         cwd = Path.cwd()
         template_file_path = os.path.join(cwd, "data", "prompt_template.txt")
-        template = open(template_file_path, "r").read()
+        template = open(template_file_path, "r", encoding='utf-8').read()
 
         prompt = PromptTemplate(
             input_variables=["history", "human_input", "product_context", "other_available_products", "audience_name"],
