@@ -20,10 +20,11 @@ The main components of the StreamerAI application include:
 
 1. Set OpenAI API Key environment variable via `export OPENAI_API_KEY=<key here>`
 2. Set Pinecone API Key environment variable via `export PINECONE_API_KEY=<key here>`
-3. Install poetry if you have not yet via `pip install poetry`
-4. `poetry env use python3.10`
-5. `poetry shell` to activate virtual environment
-6. `poetry install` to install dependencies
+3. Set TTS API Key environment variable via `export TTS_ACCESS_TOKEN=<key here>`
+4. Install poetry if you have not yet via `pip install poetry`
+5. `poetry env use python3.10`
+6. `poetry shell` to activate virtual environment
+7. `poetry install` to install dependencies
 
 ## Streamer Usage
 

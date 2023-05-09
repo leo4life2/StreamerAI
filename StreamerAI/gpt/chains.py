@@ -7,14 +7,15 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 from tenacity import retry, wait_random_exponential, stop_after_attempt
 
 from StreamerAI.settings import PRODUCT_CONTEXT_SWITCH_SIMILARITY_THRESHOLD, PINECONE_INDEX, PINECONE_TEXT_KEY
-from StreamerAI.gpt.retrieval import Retrieval
+from StreamerAI.gpt.retrieval import Retrieval, SimpleRetrieval
 
 
 class Chains:
     """A class representing a collection of language model chains used for responding to user queries."""
 
     chatid_to_chain_prevcontext = {}
-    retrieval = Retrieval(PINECONE_INDEX, OpenAIEmbeddings(), PINECONE_TEXT_KEY)
+    # retrieval = Retrieval(PINECONE_INDEX, OpenAIEmbeddings(), PINECONE_TEXT_KEY)
+    retrieval = SimpleRetrieval()
     
     @classmethod
     def create_chain(cls, temperature=0.0, verbose=False):

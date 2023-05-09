@@ -10,8 +10,10 @@ __pycache__/
 # C extensions
 *.so
 
-# Comment DB
-test.db
+# Sqlite databases
+*.db
+*.db-shm
+*.db-wal
 
 # Distribution / packaging
 .Python

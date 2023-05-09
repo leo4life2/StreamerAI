@@ -11,6 +11,7 @@ DATABASE_PATH = os.path.join(os.path.dirname(__file__), "data", "test.db")
 
 # Prompt settings
 QUESTION_ANSWERING_SCRIPT_PLACEHOLDER = "{question}"
+ASSET_DISPLAY_SCRIPT_PLACEHOLDER = "{asset:"
 
 # TTS API settings
 TTS_ACCESS_TOKEN = os.environ.get("TTS_ACCESS_TOKEN")

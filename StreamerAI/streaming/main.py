@@ -1,18 +1,15 @@
-import sqlite3
 import atexit
 import logging
 import subprocess
 import time
 import os
 import argparse
-from pathlib import Path
 
-from StreamerAI.database import StreamCommentsDB
-from StreamerAI.settings import DATABASE_PATH, QUESTION_ANSWERING_SCRIPT_PLACEHOLDER
+from StreamerAI.database.database import StreamCommentsDB, Stream, Comment, Assistant, Product, Asset
+from StreamerAI.settings import QUESTION_ANSWERING_SCRIPT_PLACEHOLDER, ASSET_DISPLAY_SCRIPT_PLACEHOLDER
 from StreamerAI.streaming.tts import TextToSpeech
 from StreamerAI.gpt.chains import Chains
-from StreamerAI.gpt.retrieval import Retrieval
-
+from StreamerAI.streaming.streamdisplay import StreamDisplay
 
 class StreamerAI:
     """
@@ -43,35 +40,19 @@ class StreamerAI:
 
         atexit.register(self.terminate_subprocesses)
 
-        self.connection = sqlite3.connect(DATABASE_PATH)
-        StreamCommentsDB.initialize_table(self.connection)
-
         if self.live:
             self.start_polling_for_comments()
 
-        self.scripts = self.fetch_scripts()
-        logging.info("testing scripts: {}".format(self.scripts))
+        stream = Stream.select().where(Stream.identifier == room_id).first()
+        if not stream:
+            stream = Stream.create(identifier=room_id, cursor=None)
+        self.stream = stream
 
-    def fetch_scripts(self):
-        """
-        Fetches the product scripts from disk.
+        self.products = Product.select()
+        logging.info("testing products: {}".format(self.products))
 
-        Returns:
-            A list of product scripts.
-        """
-        top_level_dir = Path.cwd()
-        product_scripts_path = os.path.join(top_level_dir, "StreamerAI", "data", "product_scripts")
-        scripts = []
-
-        for filename in sorted(os.listdir(product_scripts_path)):
-            file_path = os.path.join(product_scripts_path, filename)
-            
-            with open(file_path, "r", encoding="utf-8") as f:
-                data = f.read()
-                paragraphs = [paragraph for paragraph in data.split("\n") if paragraph != '']
-                scripts.append(paragraphs)
-        
-        return scripts
+        self.streamdisplay = StreamDisplay()
+        self.streamdisplay.setup_display()
 
     def start_polling_for_comments(self):
         """
@@ -95,59 +76,55 @@ class StreamerAI:
         Runs the StreamerAI instance.
         """
         while True:
-            # start main runloop
-            # while True:
-            #     for product_index, paragraphs in enumerate(self.scripts):
-            #         for paragraph in paragraphs:
-            #             logging.info("processing script paragraph: {}".format(paragraph))
-            #             if paragraph == QUESTION_ANSWERING_SCRIPT_PLACEHOLDER:
-            #                 # consider answering comments here
-            comment_results = StreamCommentsDB.query_comments(self.connection, self.room_id)
-            logging.info("query for comments: {}".format(comment_results))
+            for product in self.products:
+                for paragraph in [p for p in product.script.split("\n") if p != '']:
+                    logging.info("processing script paragraph: {}".format(paragraph))
+                    if QUESTION_ANSWERING_SCRIPT_PLACEHOLDER in paragraph:
+                        comment_results = Comment.select().where(Comment.stream == self.stream, Comment.read == False)
+                        logging.info("query for comments: {}".format(comment_results))
 
-            read_comments = []
-            for comment in comment_results:
-                id = comment[0]
-                username = comment[1]
-                text = comment[2]
+                        for comment in comment_results:
+                            username = comment.username
+                            text = comment.comment
 
-                logging.info(f"processing comment: {text}")
+                            logging.info(f"processing comment: {text}")
 
-                chain = Chains.create_chain()
+                            chain = Chains.create_chain()
 
-                product_context, ix = Chains.get_idsg_context('retrieve_with_embedding', text, None)
-                logging.info(f"using product context:\n{product_context}")
+                            product_context, ix = Chains.get_idsg_context('retrieve_with_embedding', text, None)
+                            logging.info(f"using product context:\n{product_context}")
 
-                other_products = Chains.get_product_list_text(text)
-                other_products_printable = other_products.replace(', ', ',\n')
-                logging.info(f"using other products:\n{other_products}")
+                            other_products = Chains.get_product_list_text(text)
+                            logging.info(f"using other products:\n{other_products}")
 
-                response = chain.predict(
-                    human_input=text,
-                    product_context=product_context,
-                    other_available_products=other_products
-                )
-                logging.info(
-                    f"Chat Details:\n"
-                    f"Message: {text}\n"
-                    f"Response: {response}\n"
-                )
+                            response = chain.predict(
+                                human_input=text,
+                                product_context=product_context,
+                                other_available_products=other_products
+                            )
+                            logging.info(
+                                f"Chat Details:\n"
+                                f"Message: {text}\n"
+                                f"Response: {response}\n"
+                            )
 
-                time_taken = self.tts_service.tts(response)
-                logging.info(f"Time taken for TTS: {time_taken} seconds")
+                            time_taken = self.tts_service.tts(response)
+                            logging.info(f"Time taken for TTS: {time_taken} seconds")
 
-                read_comments.append(id)
-
-            StreamCommentsDB.mark_comments_as_read(self.connection, read_comments)
-            logging.info("marked comment ids as read: {}".format(read_comments))
-
+                            comment.read = True
+                            comment.save()
+                    elif ASSET_DISPLAY_SCRIPT_PLACEHOLDER in paragraph:
+                        logging.info("loading asset for paragraph: {}".format(paragraph))
+                        assetname = paragraph.replace(ASSET_DISPLAY_SCRIPT_PLACEHOLDER, "") # hacky, fix later
+                        asset = Asset.select().where(Asset.product == product, Asset.name == assetname).first()
+                        logging.info("get asset: {} for assetname: {}".format(asset, assetname))
+                        if asset:
+                            self.streamdisplay.display_asset(asset)
+                    else:
+                        self.tts_service.tts(paragraph)
+                
+            logging.info("finished script, restarting from beginning...")
             time.sleep(1)
-            #             else:
-            #                 engine.say(paragraph)
-            #                 engine.runAndWait()
-            #
-            #     logging.info("finished script, restarting from beginning...")
-            #     time.sleep(1)
 
 def main():
     parser = argparse.ArgumentParser()
