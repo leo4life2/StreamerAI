@@ -67,7 +67,6 @@ class Retrieval:
         results = []
         for document in documents:
             product_name = str(document.metadata["product_name"])
-
             product = Product.select().where(Product.name == product_name).get()
             if product:
                 results.append(product_name)

@@ -6,16 +6,13 @@ class StreamDisplay:
 
     def __init__(self):
         self.window_name = "StreamDisplay"
-        self.x = 300
-        self.y = 300
 
     def setup_display(self):
-
         # Create a blank image with a white background
-        image = 255 * np.ones((200, 400, 3), dtype=np.uint8)
+        image = 255 * np.ones((300, 600, 3), dtype=np.uint8)
 
         # Set the text parameters
-        text = "TEST WINDOW WILL DISPLAY HERE"
+        text = "IMAGES WILL BE DISPLAYED HERE. PRESS ANY KEY TO CONTINUE"
         font = cv2.FONT_HERSHEY_SIMPLEX
         font_scale = 0.5
         font_color = (0, 0, 0)  # Black color
@@ -35,26 +32,18 @@ class StreamDisplay:
         cv2.imshow(self.window_name, image)
 
         # Move the image to the preset position
-        cv2.moveWindow(self.window_name, self.x, self.y)
-        logging.info(f"window {self.window_name} is being displayed at: {cv2.getWindowImageRect(self.window_name)}")
+        cv2.moveWindow(self.window_name, 300, 300)
 
         # Wait for user to ack
         cv2.waitKey(10000)
-
-        cv2.destroyAllWindows()
         
     def display_asset(self, asset):
-
         # Grab image from bytes
         image_array = np.frombuffer(asset.asset, np.uint8)
         image = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
 
         # Set up image display
         cv2.imshow(self.window_name, image)
-
-        # Move window to same preset position
-        cv2.moveWindow(self.window_name, self.x, self.y)
-        logging.info(f"window {self.window_name} is being displayed at: {cv2.getWindowImageRect(self.window_name)}")
 
         # Display
         cv2.waitKey(1)

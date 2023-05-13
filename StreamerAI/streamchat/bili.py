@@ -5,8 +5,8 @@ import argparse
 import asyncio
 import blivedm
 
-from ...database.database import add_comment, get_stream_cursor, save_stream_cursor
-from ..settings import DATBASE_PATH
+from StreamerAI.database.database import StreamCommentsDB
+from StreamerAI.settings import DATABASE_PATH
 from .base import StreamChatBaseHandler
 
 parser = argparse.ArgumentParser()
@@ -14,7 +14,7 @@ parser.add_argument('--room_id', type=str, help='')
 args = parser.parse_args()
 
 room_id = args.room_id
-connection = sqlite3.connect(DATBASE_PATH)
+connection = sqlite3.connect(DATABASE_PATH)
 
 class BiliHandlerWrapper(blivedm.BaseHandler):
     def __init__(self, client: blivedm.BLiveClient):
@@ -36,32 +36,32 @@ class BiliHandlerWrapper(blivedm.BaseHandler):
 
 class BiliHandler(StreamChatBaseHandler):
     async def on_heartbeat(self, message: str):
-        print(f'[{self.client.room_id}] 当前人气值：{message}')
+        logging.info(f"[BILI] heartbeat: {message}")
 
     async def on_comment(self, message: str):
-        print(f'[{self.client.room_id}] {message}')
+        logging.info(f"[BILI] comment: {message}")
         
         if len(message) < 5:
             logging.info("[BILI] not adding new comment because it's not a question")
             return
         
-        past_cursor = get_stream_cursor(connection, room_id)
+        past_cursor = StreamCommentsDB.get_stream_cursor(connection, room_id)
         logging.info("[BILI] fetching existing stream cursor for room_id: {}, existing cursor: {}".format(room_id, past_cursor))
         
-        add_comment(connection, room_id, message.split("：")[0], message.split("：")[1])
+        StreamCommentsDB.add_comment(connection, room_id, message.split("：")[0], message.split("：")[1])
         logging.info("[BILI] adding new comment for room_id: {}".format(room_id))
         
         bili_cursor = str(uuid.uuid4())
-        save_stream_cursor(connection, room_id, bili_cursor)
+        StreamCommentsDB.save_stream_cursor(connection, room_id, bili_cursor)
         logging.info("[BILI] saving new stream cursor for room_id: {}, new cursor: {}".format(room_id, bili_cursor))
 
     async def on_gift(self, message: str):
-        print(f'[{self.client.room_id}] {message}')
+        logging.info(f"[BILI] gift: {message}")
 
     async def on_purchase(self, message: str):
-        print(f'[{self.client.room_id}] {message}')
+        logging.info(f"[BILI] purchase: {message}")
         
-async def main():
+async def start():
     await run_single_client()
 
 async def run_single_client():
@@ -78,5 +78,5 @@ async def run_single_client():
     finally:
         await client.stop_and_close()
 
-if __name__ == '__main__':
-    asyncio.run(main())
+def main():
+    asyncio.run(start())
