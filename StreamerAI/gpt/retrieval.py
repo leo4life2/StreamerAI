@@ -4,7 +4,13 @@ from StreamerAI.database.database import Product
 from langchain.embeddings.openai import OpenAIEmbeddings
 
 class SimpleRetrieval:
-    """asdf"""
+    """
+    A class representing a collection of functions for processing user queries and retrieving product information.
+
+    Behaves identically to the Retrieval class, except all cosine similarity searches are done in-memory instead of reaching out to a vector database.
+    Considering our low number of products (<1000), a vector database currently proves to be quite overkill for our situation (and requires keeping the
+    sqlite db and vector db in-sync)
+    """
 
     def __init__(self):
         self.embeddings = OpenAIEmbeddings()
@@ -16,9 +22,11 @@ class SimpleRetrieval:
         return dot_product / (norm_a * norm_b)
 
     def _top_k_products_with_embedding(self, message, k=10):
+        # fetch message embedding
         result = self.embeddings.embed_query(message)
         message_embedding = np.array(result)
 
+        # fetch product embeddings
         products = Product.select()
         product_embeddings = [np.frombuffer(p.description_embedding) for p in products]
 
@@ -31,24 +39,23 @@ class SimpleRetrieval:
 
         similarities = similarities.flatten()
         for index, product in enumerate(products):
-            product._cached_similarity_score = similarities[index]
+            # temporarily cache this so it is available to be returned as part of retrieve_with_embedding
+            product.__cached_similarity_score = similarities[index]
 
         # get top k indices
         top_k_indices = np.argsort(similarities)[::-1][:k]
 
+        # return products corresponding to those top k indices
         return [products[i] for i in top_k_indices]
 
     def retrieve_top_product_names_with_embedding(self, message, k=10):
         return [p.name for p in self._top_k_products_with_embedding(message, k)]
     
-    def add_embedding(self, product_name, product_description):
-        pass
-    
     def retrieve_with_embedding(self, message):
         products = self._top_k_products_with_embedding(message, 1)
         if len(products) > 0:
             top_product = products[0]
-            return top_product.description, top_product.name, top_product._cached_similarity_score
+            return top_product.description, top_product.name, top_product.__cached_similarity_score
         return '', '', 0
 
 class Retrieval:
@@ -72,14 +79,6 @@ class Retrieval:
                 results.append(product_name)
 
         return results
-    
-    def add_embedding(self, product_name, product_description):
-        """
-        """
-        metadata = {
-            "product_name": product_name,
-        }
-        self.vectorstore.add_texts([product_description], [metadata])
 
     def retrieve_with_embedding(self, message):
         """

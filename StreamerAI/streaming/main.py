@@ -5,11 +5,13 @@ import time
 import os
 import argparse
 
-from StreamerAI.database.database import StreamCommentsDB, Stream, Comment, Assistant, Product, Asset
+from StreamerAI.database.database import StreamCommentsDB, Stream, Comment, Product, Asset
 from StreamerAI.settings import QUESTION_ANSWERING_SCRIPT_PLACEHOLDER, ASSET_DISPLAY_SCRIPT_PLACEHOLDER
 from StreamerAI.streaming.tts import TextToSpeech
 from StreamerAI.gpt.chains import Chains
 from StreamerAI.streaming.streamdisplay import StreamDisplay
+
+logger = logging.getLogger("StreamerAI")
 
 class StreamerAI:
     """
@@ -49,16 +51,18 @@ class StreamerAI:
             stream = Stream.create(identifier=room_id, cursor=None)
         self.stream = stream
 
-        self.products = Product.select()
-        logging.info("testing products: {}".format(self.products))
+        self.products = Product.select()[:]
 
         self.streamdisplay = StreamDisplay()
         self.streamdisplay.setup_display()
+
+        logger.info("StreamerAI initialized!")
 
     def start_polling_for_comments(self):
         """
         Starts polling for new comments.
         """
+        logger.info("StreamerAI is live, starting subprocess to poll for comments")
         streamchat_filename = os.path.join(os.path.dirname(__file__), "streamchat.py")
         comments_command = command = ['python', streamchat_filename, self.room_id]
         process = subprocess.Popen(comments_command, stdout=subprocess.PIPE)
@@ -68,35 +72,36 @@ class StreamerAI:
         """
         Terminates all subprocesses created by this StreamerAI instance.
         """
-        logging.info("atexit invoked terminate_subprocesses, terminating: {}".format(self.subprocesses))
+        logger.info("atexit invoked terminate_subprocesses, terminating: {}".format(self.subprocesses))
         for subprocess in self.subprocesses:
             subprocess.terminate()
 
-    def process_media_asset(self, asset_name):
-        asset = Asset.select().where(Asset.product == self.current_product, Asset.name == asset_name).first()
-        logging.info("get asset: {} for asset_name: {}".format(asset, asset_name))
+    def process_media_asset(self, asset_name, current_product):
+        asset = Asset.select().where(Asset.product == current_product, Asset.name == asset_name).first()
+        logger.info(f"process_media_asset fetched asset: {asset} for asset_name: {asset_name}")
         if asset:
             self.streamdisplay.display_asset(asset)
             
-    def process_comments(self, comment_results):
+    def process_comments(self, current_product):
         """
         Processes a list of comments.
         """
+        comment_results = Comment.select().where(Comment.stream == self.stream, Comment.read == False)[:]
+        logger.info(f"process_comments fetched new comments: {comment_results}")
         for comment in comment_results:
             start = time.time()
 
             username = comment.username
             text = comment.comment
-
-            logging.info(f"processing comment: {text}")
+            logger.info(f"processing comment: {text}")
 
             chain = Chains.create_chain()
 
-            product_context, ix = Chains.get_product_context(text, None)
-            logging.info(f"using product context ix: {ix}")
+            product_context, name = Chains.get_product_context(text, current_product.description)
+            logger.info(f"using product: {name}")
 
             other_products = Chains.get_product_list_text(text)
-            logging.info(f"using other products:\n{other_products}")
+            logger.debug(f"using other products:\n{other_products}")
 
             response = chain.predict(
                 human_input=text,
@@ -104,7 +109,7 @@ class StreamerAI:
                 other_available_products=other_products,
                 audience_name=username
             )
-            logging.info(
+            logger.info(
                 f"Chat Details:\n"
                 f"Message: {text}\n"
                 f"Response: {response}\n"
@@ -115,38 +120,47 @@ class StreamerAI:
             try:
                 time_taken = self.tts_service.tts(response)
             except Exception as e:
-                logging.error(f"TTS Error: {e}")
+                logger.error(f"TTS Error: {e}")
                 continue
             
-            logging.info(f"Time taken for GPT Completion: {gpt_time_taken} TTS request: {time_taken} seconds")
+            logger.info(f"Time taken for GPT Completion: {gpt_time_taken} TTS request: {time_taken} seconds")
 
             comment.read = True
             comment.save()
 
-    def process_paragraph(self, paragraph):
+    def should_handle_comments_for_paragraph(self, paragraph):
+        return paragraph == QUESTION_ANSWERING_SCRIPT_PLACEHOLDER or self.disable_script
+    
+    def should_display_asset_for_paragraph(self, paragraph):
+        return "{{{" in paragraph and "}}}" in paragraph
+
+    def process_paragraph(self, paragraph, current_product):
         """
-        Processes a single paragraph.
+        Processes a single paragraph in the product's script
+
+        The script paragraph could represent:
+        1) A simple paragraph meant to be read out loud via TTS
+        2) "{question}" - denoting that it's time to pause and answer questions
+        3) "{{{assetname}}} - denoting that the image or video with name should start playing
         """
-        if paragraph == QUESTION_ANSWERING_SCRIPT_PLACEHOLDER or self.disable_script:
-            comment_results = Comment.select().where(Comment.stream == self.stream, Comment.read == False)
-            logging.info("query for comments: {}".format(comment_results))
-            read_comments = self.process_comments(comment_results)
+        logger.info(f"processing paragraph: {paragraph}")
+        if self.should_handle_comments_for_paragraph(paragraph):
+            self.process_comments(current_product)
             time.sleep(1)
-        elif ASSET_DISPLAY_SCRIPT_PLACEHOLDER in paragraph:
-            assetname = paragraph.replace(ASSET_DISPLAY_SCRIPT_PLACEHOLDER, "") # hacky, fix later
-            self.process_media_asset(assetname)
+        elif self.should_display_asset_for_paragraph(paragraph):
+            assetname = paragraph.replace("{{{", "").replace("}}}", "")
+            self.process_media_asset(assetname, current_product)
         else:
             time_taken = self.tts_service.tts(paragraph)
-            logging.info(f"Time taken for TTS request: {time_taken} seconds")
+            logger.info(f"Time taken for TTS request: {time_taken} seconds")
 
-    def process_scripts(self, paragraphs):
+    def process_product(self, current_product):
         """
-        Processes a list of paragraphs.
+        Processes a single product
         """
-        for paragraph in [p for p in paragraphs.split("\n") if p != '']:
-            logging.info("processing script paragraph: {}".format(paragraph))
-            self.process_paragraph(paragraph)
-
+        script_paragraphs = [paragraph for paragraph in current_product.script.split("\n") if paragraph != '']
+        for paragraph in script_paragraphs:
+            self.process_paragraph(paragraph, current_product)
 
     def run(self):
         """
@@ -154,9 +168,8 @@ class StreamerAI:
         """
         while True:
             for product in self.products:
-                self.current_product = product
-                self.process_scripts(product.script)
-            logging.info("finished script, restarting from beginning...")
+                self.process_product(product)
+            logger.info("StreamerAI finished all products - restarting from beginning")
             time.sleep(1)
 
 def main():

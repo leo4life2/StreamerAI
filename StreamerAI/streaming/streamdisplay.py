@@ -2,6 +2,8 @@ import cv2
 import numpy as np
 import logging
 
+logger = logging.getLogger("StreamDisplay")
+
 class StreamDisplay:
 
     def __init__(self):
@@ -30,6 +32,7 @@ class StreamDisplay:
 
         # Display the image
         cv2.imshow(self.window_name, image)
+        logger.info(f"displaying default setup image in window {self.window_name}")
 
         # Move the image to the preset position
         cv2.moveWindow(self.window_name, 300, 300)
@@ -44,6 +47,7 @@ class StreamDisplay:
 
         # Set up image display
         cv2.imshow(self.window_name, image)
+        logger.info(f"displaying asset {asset.name} in window {self.window_name}")
 
         # Display
         cv2.waitKey(1)

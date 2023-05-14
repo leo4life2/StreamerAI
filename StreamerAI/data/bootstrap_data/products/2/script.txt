@@ -1,10 +1,10 @@
-{asset:test3
+{{{test3.png}}}
 
 尊敬的各位朋友们，今天我要向大
 
 {question}
 
-{asset:test4
+{{{test4.png}}}
 
 首先，钙和镁对我们的身体健康至关重要。钙对于
 

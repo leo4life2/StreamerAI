@@ -16,7 +16,6 @@ class Chains:
     """A class representing a collection of language model chains used for responding to user queries."""
 
     chatid_to_chain_prevcontext = {}
-    # retrieval = Retrieval(PINECONE_INDEX, OpenAIEmbeddings(), PINECONE_TEXT_KEY)
     retrieval = SimpleRetrieval()
     
     @classmethod
