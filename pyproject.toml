@@ -48,12 +48,8 @@ urllib3 = "1.26.15"
 yarl = "1.9.2"
 bilibili-utils = "^0.2"
 blivedm = "0.1.1"
-ipdb = "^0.13.13"
-tiktoken = "^0.4.0"
 peewee = "^3.16.2"
-pyqt5-sip = "^12.12.1"
 opencv-python = "^4.7.0.72"
-pygetwindow = "^0.0.9"
 
 [tool.poetry.scripts]
 start = "StreamerAI.streaming.main:main"
