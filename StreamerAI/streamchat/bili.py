@@ -45,7 +45,9 @@ class BiliHandler(StreamChatBaseHandler):
             logging.info("[BILI] not adding new comment because it's not a question")
             return
         
-        past_cursor = StreamCommentsDB.get_stream_cursor(connection, room_id)
+        stream = Stream.select().where(Stream.identifier == room_id).get()
+        past_cursor = stream.cursor
+        # past_cursor = StreamCommentsDB.get_stream_cursor(connection, room_id)
         logging.info("[BILI] fetching existing stream cursor for room_id: {}, existing cursor: {}".format(room_id, past_cursor))
         
         StreamCommentsDB.add_comment(connection, room_id, message.split("：")[0], message.split("：")[1])
