@@ -8,10 +8,12 @@ class StreamDisplay:
 
     def __init__(self):
         self.window_name = "StreamDisplay"
+        self.img_size_x = 600
+        self.img_size_y = 600
 
     def setup_display(self):
         # Create a blank image with a white background
-        image = 255 * np.ones((300, 600, 3), dtype=np.uint8)
+        image = 255 * np.ones((self.img_size_x, self.img_size_y, 3), dtype=np.uint8)
 
         # Set the text parameters
         text = "IMAGES WILL BE DISPLAYED HERE. PRESS ANY KEY TO CONTINUE"
@@ -44,9 +46,10 @@ class StreamDisplay:
         # Grab image from bytes
         image_array = np.frombuffer(asset.asset, np.uint8)
         image = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
+        image_resized = cv2.resize(image, (self.img_size_x, self.img_size_y))
 
         # Set up image display
-        cv2.imshow(self.window_name, image)
+        cv2.imshow(self.window_name, image_resized)
         logger.info(f"displaying asset {asset.name} in window {self.window_name}")
 
         # Display
