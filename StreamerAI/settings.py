@@ -38,3 +38,4 @@ OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
 BOOTSTRAP_DATA_DIRECTORY = os.path.join(os.path.dirname(__file__), "data", "bootstrap_data")
 
 LLM_NAME = "gpt-3.5-turbo" # gpt-4 or gpt-3.5-turbo
+LLM_TEMPERATURE = 1.0

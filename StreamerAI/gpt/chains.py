@@ -4,11 +4,10 @@ import os
 from langchain import LLMChain, PromptTemplate
 from langchain.chat_models import ChatOpenAI
 from langchain.memory import ConversationBufferWindowMemory
-from langchain.embeddings.openai import OpenAIEmbeddings
 from tenacity import retry, wait_random_exponential, stop_after_attempt
 from pathlib import Path
 
-from StreamerAI.settings import PRODUCT_CONTEXT_SWITCH_SIMILARITY_THRESHOLD, PINECONE_INDEX, PINECONE_TEXT_KEY, LLM_NAME
+from StreamerAI.settings import PRODUCT_CONTEXT_SWITCH_SIMILARITY_THRESHOLD, LLM_NAME, LLM_TEMPERATURE
 from StreamerAI.gpt.retrieval import Retrieval, SimpleRetrieval
 
 
@@ -19,7 +18,7 @@ class Chains:
     retrieval = SimpleRetrieval()
     
     @classmethod
-    def create_chain(cls, temperature=0.3, verbose=False):
+    def create_chain(cls, temperature=LLM_TEMPERATURE, verbose=False):
         """Create and return a new language model chain.
 
         Args:
