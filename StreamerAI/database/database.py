@@ -1,72 +1,64 @@
-class StreamCommentsDB:
-    @staticmethod
-    def initialize_table(connection):
-        """Create the necessary tables if they don't already exist."""
-        cursor = connection.cursor()
-        cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS stream_comments (
-                id INTEGER PRIMARY KEY,
-                stream_identifier TEXT NOT NULL,
-                username TEXT NOT NULL,
-                comment TEXT NOT NULL,
-                read INTEGER NOT NULL DEFAULT FALSE
-            );
-            """
-        )
-        cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS stream_cursor (
-                stream_identifier TEXT PRIMARY KEY,
-                cursor TEXT NOT NULL
-            );
-            """
-        )
-        connection.commit()
+from StreamerAI.settings import DATABASE_PATH
+from peewee import SqliteDatabase, Model, CharField, BlobField, ForeignKeyField, TextField, BooleanField
+import os
+import logging
 
-    @staticmethod
-    def add_comment(connection, stream_identifier, username, comment):
-        """Add a new comment to the database."""
-        cursor = connection.cursor()
-        cursor.execute("INSERT INTO stream_comments (stream_identifier, username, comment) VALUES (?, ?, ?)", (stream_identifier, username, comment))
-        connection.commit()
+# Uncomment to include executed SQL queries in the logs
+# logger = logging.getLogger('peewee')
+# logger.addHandler(logging.StreamHandler())
+# logger.setLevel(logging.DEBUG)
 
-    @staticmethod
-    def query_comments(connection, stream_identifier):
-        """Retrieve all comments for a given stream identifier that have not been marked as read."""
-        cursor = connection.cursor()
-        cursor.execute("SELECT id, username, comment FROM stream_comments WHERE stream_identifier = ? AND read = False", (stream_identifier,))
-        return cursor.fetchall()
+StreamCommentsDB = SqliteDatabase(DATABASE_PATH, pragmas={
+    'journal_mode': 'wal', # allow readers and writers to co-exist
+    'foreign_keys': 1,  # enforce foreign-key constraints
+    'ignore_check_constraints': 0, # enforce CHECK constraints
+    'synchronous': 2, # checkpoint WAL on every commit, has the side-effect of making sure new data shows up to readers faster
+})
 
-    @staticmethod
-    def mark_comments_as_read(connection, comment_ids):
-        """Mark the specified comments as read."""
-        cursor = connection.cursor()
-        cursor.execute("UPDATE stream_comments SET read = True WHERE id IN ({})".format(','.join('?' * len(comment_ids))), comment_ids)
-        connection.commit()
+class BaseModel(Model):
+    class Meta:
+        database = StreamCommentsDB
 
-    @staticmethod
-    def delete_all_comments(connection):
-        """Delete all comments from the database."""
-        cursor = connection.cursor()
-        cursor.execute("DELETE FROM stream_comments")
-        connection.commit()
+class Stream(BaseModel):
+    identifier = CharField(primary_key=True, unique=True)
+    cursor = BlobField(null=True)
 
-    @staticmethod
-    def save_stream_cursor(connection, stream_identifier, stream_cursor):
-        """Save the last seen cursor for a given stream identifier."""
-        if stream_cursor is None:
-            return
-        cursor = connection.cursor()
-        cursor.execute("INSERT OR REPLACE INTO stream_cursor (stream_identifier, cursor) VALUES (?, ?)", (stream_identifier, stream_cursor))
-        connection.commit()
+class Comment(BaseModel):
+    stream = ForeignKeyField(Stream, backref="comments")
+    username = CharField()
+    comment = CharField()
+    read = BooleanField()
 
-    @staticmethod
-    def get_stream_cursor(connection, stream_identifier):
-        """Retrieve the last seen cursor for a given stream identifier."""
-        cursor = connection.cursor()
-        cursor.execute("SELECT cursor FROM stream_cursor WHERE stream_identifier = ?", (stream_identifier,))
-        result = cursor.fetchone()
-        if result is not None:
-            return result[0]
-        return None
+class Product(BaseModel):
+    name = CharField(primary_key=True, unique=True)
+    description = TextField()
+    description_embedding = BlobField()
+    script = TextField()
+
+class Asset(BaseModel):
+    name = CharField(primary_key=True, unique=True)
+    product = ForeignKeyField(Product, backref="assets")
+    asset = BlobField()
+
+ALL_TABLES = [Stream, Comment, Product, Asset]
+
+def reset_database():
+    def _delete_if_exists(path):
+        if os.path.exists(path):
+            os.remove(path)
+
+    db_path = DATABASE_PATH
+    shm_path = db_path + "-shm"
+    wal_path = db_path + "-wal"
+
+    _delete_if_exists(db_path)
+    _delete_if_exists(shm_path)
+    _delete_if_exists(wal_path)
+
+    # need to re-create tables again after
+    with StreamCommentsDB:
+        StreamCommentsDB.create_tables(ALL_TABLES)
+
+
+with StreamCommentsDB:
+    StreamCommentsDB.create_tables(ALL_TABLES)

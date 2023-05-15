@@ -48,11 +48,14 @@ urllib3 = "1.26.15"
 yarl = "1.9.2"
 bilibili-utils = "^0.2"
 blivedm = "0.1.1"
+peewee = "^3.16.2"
+opencv-python = "^4.7.0.72"
 
 [tool.poetry.scripts]
 start = "StreamerAI.streaming.main:main"
 bili = "StreamerAI.streamchat.bili:main"
 fake = "StreamerAI.streamchat.fake:main"
+bootstrap = "StreamerAI.data.bootstrap:main"
 
 [tool.poetry.group.dev.dependencies]
 httpx = "^0.23.3"

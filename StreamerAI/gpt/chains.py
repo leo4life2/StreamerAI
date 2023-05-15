@@ -4,22 +4,21 @@ import os
 from langchain import LLMChain, PromptTemplate
 from langchain.chat_models import ChatOpenAI
 from langchain.memory import ConversationBufferWindowMemory
-from langchain.embeddings.openai import OpenAIEmbeddings
 from tenacity import retry, wait_random_exponential, stop_after_attempt
 from pathlib import Path
 
-from StreamerAI.settings import PRODUCT_CONTEXT_SWITCH_SIMILARITY_THRESHOLD, PINECONE_INDEX, PINECONE_TEXT_KEY, LLM_NAME
-from StreamerAI.gpt.retrieval import Retrieval
+from StreamerAI.settings import PRODUCT_CONTEXT_SWITCH_SIMILARITY_THRESHOLD, LLM_NAME, LLM_TEMPERATURE
+from StreamerAI.gpt.retrieval import Retrieval, SimpleRetrieval
 
 
 class Chains:
     """A class representing a collection of language model chains used for responding to user queries."""
 
     chatid_to_chain_prevcontext = {}
-    retrieval = Retrieval(PINECONE_INDEX, OpenAIEmbeddings(), PINECONE_TEXT_KEY)
+    retrieval = SimpleRetrieval()
     
     @classmethod
-    def create_chain(cls, temperature=0.3, verbose=False):
+    def create_chain(cls, temperature=LLM_TEMPERATURE, verbose=False):
         """Create and return a new language model chain.
 
         Args:
@@ -30,7 +29,7 @@ class Chains:
             LLMChain: the newly created language model chain
         """
         cwd = Path.cwd()
-        template_file_path = os.path.join(cwd, "data", "prompt_template.txt")
+        template_file_path = os.path.join(cwd, "StreamerAI", "data", "prompt_template.txt")
         template = open(template_file_path, "r", encoding='utf-8').read()
 
         prompt = PromptTemplate(
@@ -58,15 +57,15 @@ class Chains:
 
         Returns:
             str: the product context
-            int: the product index
+            str: the product name
         """
         # Currently only using embedding retrieval no matter what
-        descr, ix, score = cls.retrieval.retrieve_with_embedding(message)
+        descr, name, score = cls.retrieval.retrieve_with_embedding(message)
         logging.info(f"Score is {score}")
         if prev_context and score < PRODUCT_CONTEXT_SWITCH_SIMILARITY_THRESHOLD:
             logging.info("Using old context")
-            return prev_context, ix
-        return descr, ix
+            return prev_context, name
+        return descr, name
     
     @classmethod
     def get_product_list_text(cls, message):
