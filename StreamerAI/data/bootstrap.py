@@ -45,7 +45,7 @@ class DatasetBootstrapper:
                 continue
             product_description_embedding = numpy.array(product_description_embedding)
                 
-            product = Product.create(name=product_name, description=product_description, description_embedding=product_description_embedding, script=product_script)
+            product = Product.create(name=product_name, description=product_description, description_embedding=product_description_embedding, script=product_script, current=False)
             logger.info(f"added product {product.name}")
 
             for asset_filename in os.listdir(os.path.join(self.data_directory, "products", directory, "assets")):

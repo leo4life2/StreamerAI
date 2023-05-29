@@ -87,46 +87,26 @@ class StreamerAI:
         Processes a list of comments.
         """
         comment_results = Comment.select().where(Comment.stream == self.stream, Comment.read == False)[:]
-        logger.info(f"process_comments fetched new comments: {comment_results}")
         for comment in comment_results:
-            start = time.time()
 
             username = comment.username
             text = comment.comment
-            logger.info(f"processing comment: {text}")
+            response = comment.reply
 
-            chain = Chains.create_chain()
-
-            product_context, name = Chains.get_product_context(text, current_product.description)
-            logger.info(f"using product: {name}")
-
-            other_products = Chains.get_product_list_text(text)
-            logger.debug(f"using other products:\n{other_products}")
-
-            response = chain.predict(
-                human_input=text,
-                product_context=product_context,
-                other_available_products=other_products,
-                audience_name=username
-            )
             logger.info(
-                f"Chat Details:\n"
-                f"Message: {text}\n"
+                f"User: {username}"
+                f"Comment: {text}\n"
                 f"Response: {response}\n"
             )
-            end = time.time()
-            gpt_time_taken = end - start
             
             try:
                 time_taken = self.tts_service.tts(response)
+                logger.debug(f"TTS server took: {time_taken} seconds")
             except Exception as e:
                 logger.error(f"TTS Error: {e}")
                 continue
-            
-            logger.info(f"Time taken for GPT Completion: {gpt_time_taken} TTS request: {time_taken} seconds")
 
-            comment.read = True
-            comment.save()
+            comment.update(read=True)
 
     def should_handle_comments_for_paragraph(self, paragraph):
         return paragraph == QUESTION_ANSWERING_SCRIPT_PLACEHOLDER or self.disable_script
@@ -158,14 +138,23 @@ class StreamerAI:
         """
         Processes a single product
         """
+        current_product.update(current=True).execute()
+
         script_paragraphs = [paragraph for paragraph in current_product.script.split("\n") if paragraph != '']
         for paragraph in script_paragraphs:
             self.process_paragraph(paragraph, current_product)
+
+        # clear out any pending questions before switching to next product
+        self.process_comments(current_product)
+
+        current_product.update(current=False).execute()
 
     def run(self):
         """
         Runs the StreamerAI instance.
         """
+        # reset all products to not current, in case this script was killed during execution
+        Product.update(current=False).execute()
         while True:
             for product in self.products:
                 self.process_product(product)

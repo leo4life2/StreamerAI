@@ -5,9 +5,11 @@ import argparse
 import asyncio
 import blivedm
 
-from StreamerAI.database.database import StreamCommentsDB
+from StreamerAI.database.database import StreamCommentsDB, Stream, Comment
 from StreamerAI.settings import DATABASE_PATH
 from .base import StreamChatBaseHandler
+
+logger = logging.getLogger("StreamerAI.BiliHandler")
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--room_id', type=str, help='')
@@ -36,32 +38,40 @@ class BiliHandlerWrapper(blivedm.BaseHandler):
 
 class BiliHandler(StreamChatBaseHandler):
     async def on_heartbeat(self, message: str):
-        logging.info(f"[BILI] heartbeat: {message}")
+        logger.info(f"[BILI] heartbeat: {message}")
 
     async def on_comment(self, message: str):
-        logging.info(f"[BILI] comment: {message}")
+        logger.info(f"[BILI] comment: {message}")
         
         if len(message) < 5:
-            logging.info("[BILI] not adding new comment because it's not a question")
+            logger.info("[BILI] not adding new comment because it's not a question")
             return
         
         stream = Stream.select().where(Stream.identifier == room_id).get()
         past_cursor = stream.cursor
-        # past_cursor = StreamCommentsDB.get_stream_cursor(connection, room_id)
-        logging.info("[BILI] fetching existing stream cursor for room_id: {}, existing cursor: {}".format(room_id, past_cursor))
-        
-        StreamCommentsDB.add_comment(connection, room_id, message.split("：")[0], message.split("：")[1])
-        logging.info("[BILI] adding new comment for room_id: {}".format(room_id))
+        logger.info("[BILI] fetching existing stream cursor for room_id: {}, existing cursor: {}".format(room_id, past_cursor))
+
+        username = message.split("：")[0]
+        text = message.split("：")[1]
+
+        response = self.get_comment_response(username, text)
+        if not response:
+            logger.info("could not generate response, skipping comment")
+            return
+
+        Comment.create(stream=stream, username=username, comment=text, read=False, reply=response)
+        logger.info("[BILI] adding new comment for room_id: {}".format(room_id))
         
         bili_cursor = str(uuid.uuid4())
-        StreamCommentsDB.save_stream_cursor(connection, room_id, bili_cursor)
-        logging.info("[BILI] saving new stream cursor for room_id: {}, new cursor: {}".format(room_id, bili_cursor))
+        stream.cursor = bili_cursor
+        stream.save()
+        logger.info("[BILI] saving new stream cursor for room_id: {}, new cursor: {}".format(room_id, bili_cursor))
 
     async def on_gift(self, message: str):
-        logging.info(f"[BILI] gift: {message}")
+        logger.info(f"[BILI] gift: {message}")
 
     async def on_purchase(self, message: str):
-        logging.info(f"[BILI] purchase: {message}")
+        logger.info(f"[BILI] purchase: {message}")
         
 async def start():
     await run_single_client()
