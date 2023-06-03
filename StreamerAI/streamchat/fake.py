@@ -9,8 +9,7 @@ from StreamerAI.database.database import Stream, Comment
 from StreamerAI.settings import DATABASE_PATH
 from StreamerAI.streaming.question_classifier import QuestionDetector
 from .base import StreamChatBaseHandler
-from StreamerAI.gpt.chains import Chains
-from StreamerAI.database.database import StreamCommentsDB, Stream, Comment, Product, Asset
+from StreamerAI.database.database import Stream, Comment
 
 logger = logging.getLogger("[FAKE]StreamerAI.FakeHandler")
 

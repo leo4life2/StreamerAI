@@ -7,6 +7,7 @@ from langchain.memory import ConversationBufferWindowMemory
 from tenacity import retry, wait_random_exponential, stop_after_attempt
 from pathlib import Path
 
+from StreamerAI.database.database import Persona
 from StreamerAI.settings import PRODUCT_CONTEXT_SWITCH_SIMILARITY_THRESHOLD, LLM_NAME, LLM_TEMPERATURE
 from StreamerAI.gpt.retrieval import Retrieval, SimpleRetrieval
 
@@ -18,7 +19,7 @@ class Chains:
     retrieval = SimpleRetrieval()
     
     @classmethod
-    def create_chain(cls, temperature=LLM_TEMPERATURE, verbose=False):
+    def create_chain(cls, temperature=LLM_TEMPERATURE, verbose=False, prompt_type='qa'):
         """Create and return a new language model chain.
 
         Args:
@@ -28,14 +29,34 @@ class Chains:
         Returns:
             LLMChain: the newly created language model chain
         """
-        cwd = Path.cwd()
-        template_file_path = os.path.join(cwd, "StreamerAI", "data", "prompt_template.txt")
-        template = open(template_file_path, "r", encoding='utf-8').read()
-
+        persona = Persona.select().where(Persona.current == True).first()
+        
+        prompt_template = persona.qa_prompt
         prompt = PromptTemplate(
             input_variables=["history", "human_input", "product_context", "other_available_products", "audience_name"],
-            template=template
+            template=prompt_template
         )
+
+        if prompt_type == "qa":
+            prompt_template = persona.qa_prompt
+            prompt = PromptTemplate(
+                input_variables=["history", "human_input", "product_context", "other_available_products", "audience_name"],
+                template=prompt_template
+            )
+        elif prompt_type == "new_viewer":
+            prompt_template = persona.new_viewer_prompt
+            prompt = PromptTemplate(
+                input_variables=[],
+                template=prompt_template
+            )
+        elif prompt_type == "scheduled":
+            prompt_template = persona.scheduled_prompt
+            prompt = PromptTemplate(
+                input_variables=[],
+                template=prompt_template
+            )
+        else:
+            logging.error(f"create_chain could not handle prompt_type of {prompt_type}")
 
         chatgpt_chain = LLMChain(
             llm=ChatOpenAI(model_name=LLM_NAME, temperature=temperature),

@@ -5,7 +5,7 @@ import argparse
 import asyncio
 import blivedm
 
-from StreamerAI.database.database import StreamCommentsDB, Stream, Comment
+from StreamerAI.database.database import Stream, Comment
 from StreamerAI.settings import DATABASE_PATH
 from .base import StreamChatBaseHandler
 

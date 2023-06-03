@@ -35,14 +35,21 @@ class Product(BaseModel):
     description = TextField()
     description_embedding = BlobField()
     script = TextField()
-    current = BooleanField()
+    current = BooleanField(default=False)
 
 class Asset(BaseModel):
     name = CharField(primary_key=True, unique=True)
     product = ForeignKeyField(Product, backref="assets")
     asset = BlobField()
 
-ALL_TABLES = [Stream, Comment, Product, Asset]
+class Persona(BaseModel):
+    name = CharField(primary_key=True, unique=True)
+    qa_prompt = TextField()
+    new_viewer_prompt = TextField()
+    scheduled_prompt = TextField()
+    current = BooleanField(default=False)
+
+ALL_TABLES = [Stream, Comment, Product, Asset, Persona]
 
 def reset_database():
     def _delete_if_exists(path):
