@@ -4,9 +4,9 @@ import os
 import logging
 
 # Uncomment to include executed SQL queries in the logs
-# logger = logging.getLogger('peewee')
-# logger.addHandler(logging.StreamHandler())
-# logger.setLevel(logging.DEBUG)
+logger = logging.getLogger('peewee')
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.DEBUG)
 
 StreamCommentsDB = SqliteDatabase(DATABASE_PATH, pragmas={
     'journal_mode': 'wal', # allow readers and writers to co-exist
@@ -27,6 +27,7 @@ class Comment(BaseModel):
     stream = ForeignKeyField(Stream, backref="comments")
     username = CharField()
     comment = CharField()
+    reply = TextField()
     read = BooleanField()
 
 class Product(BaseModel):
@@ -34,6 +35,7 @@ class Product(BaseModel):
     description = TextField()
     description_embedding = BlobField()
     script = TextField()
+    current = BooleanField()
 
 class Asset(BaseModel):
     name = CharField(primary_key=True, unique=True)

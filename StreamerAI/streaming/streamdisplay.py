@@ -8,8 +8,8 @@ class StreamDisplay:
 
     def __init__(self):
         self.window_name = "StreamDisplay"
-        self.img_size_x = 600
-        self.img_size_y = 600
+        self.img_size_x = 2000
+        self.img_size_y = 2000
 
     def setup_display(self):
         # Create a blank image with a white background
@@ -18,7 +18,7 @@ class StreamDisplay:
         # Set the text parameters
         text = "IMAGES WILL BE DISPLAYED HERE. PRESS ANY KEY TO CONTINUE"
         font = cv2.FONT_HERSHEY_SIMPLEX
-        font_scale = 0.5
+        font_scale = 1
         font_color = (0, 0, 0)  # Black color
         thickness = 1
 
