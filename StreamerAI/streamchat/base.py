@@ -8,6 +8,39 @@ logger = logging.getLogger("StreamChatBaseHandler")
 
 class StreamChatBaseHandler():
 
+    def __init__(self):
+        self.max_comments_per_window = 3
+        self.window_size_in_seconds = 30
+        self.window_start_time = time.time()
+        self.window_comment_count = 0
+        self.total_received_comment_count = 0
+        self.total_passed_comment_count = 0
+
+    def meets_rate_limit(self):
+        current_time = time.time()
+        time_since_window_start = current_time - self.window_start_time
+
+        if time_since_window_start > self.window_size_in_seconds:
+            self.window_start_time = current_time
+            self.window_comment_count = 0
+
+        if self.window_comment_count < self.max_comments_per_window:
+            self.window_comment_count += 1
+            self.total_passed_comment_count += 1
+            self.total_received_comment_count += 1
+            logger.info(
+                f"comment passed window limit starting at {self.window_start_time} with current count {self.window_comment_count}\n"
+                f"total received comments: {self.total_received_comment_count} total passed comments: {self.total_passed_comment_count} "
+            )
+            return True
+        else:
+            self.total_received_comment_count += 1
+            logger.info(
+                f"comment failed window limit starting at {self.window_start_time} with current count {self.window_comment_count}\n"
+                f"total received comments: {self.total_received_comment_count} total passed comments: {self.total_passed_comment_count} "
+            )
+            return False
+
     def get_comment_response(self, username: str, message: str):
         start = time.time()
 

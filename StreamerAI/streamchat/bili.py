@@ -47,6 +47,9 @@ class BiliHandler(StreamChatBaseHandler):
             logger.info("[BILI] not adding new comment because it's not a question")
             return
         
+        if not self.meets_rate_limit():
+            return
+
         stream = Stream.select().where(Stream.identifier == room_id).get()
         past_cursor = stream.cursor
         logger.info("[BILI] fetching existing stream cursor for room_id: {}, existing cursor: {}".format(room_id, past_cursor))
