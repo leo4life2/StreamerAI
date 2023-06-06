@@ -30,5 +30,12 @@ The main components of the StreamerAI application include:
 
 1. `poetry shell` if you haven't yet
 2. `source .env` if you haven't yet
-3. Start main script `poetry run start --room_id '<room id here>'`
-4. Use the fake streamchat script to insert comments `poetry run fake --room_id '33'`
+3. Bootstrap database with some product data
+   1. `poetry run bootstrap --reset`
+   2. `poetry run bootstrap --products`
+4. Start main script `poetry run start --room_id '<room id here>'`
+5. Launch a streamchat fetcher
+   1. Fake (demo use) `poetry run fake --room_id 'room_id_here'`
+   2. Bilibili `poetry run bili --room_id 'room_id_here'`
+   3. Douyin `poetry run douyin --room_id 'room_id_here'`
+      1. For this, a chrome window will pop up with that streaming room. You will need to scan the QR code with your Douyin app to log in, or else the chat won't show up.

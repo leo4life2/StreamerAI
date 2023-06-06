@@ -8,7 +8,8 @@ logger = logging.getLogger("StreamChatBaseHandler")
 
 class StreamChatBaseHandler():
 
-    def get_comment_response(self, username: str, message: str):
+    @staticmethod
+    def get_comment_response(username: str, message: str):
         start = time.time()
 
         current_product = Product.select().where(Product.current == True).first()
@@ -38,7 +39,8 @@ class StreamChatBaseHandler():
         end = time.time()
         time_taken = end - start
         logger.info(f"time taken to process comment: {time_taken} seconds")
-
+        
+        return response
 
     async def on_heartbeat(self, message: str):
         raise NotImplementedError()
