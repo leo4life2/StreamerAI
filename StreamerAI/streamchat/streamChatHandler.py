@@ -4,6 +4,7 @@ import uuid
 
 from StreamerAI.gpt.chains import Chains
 from StreamerAI.database.database import Comment, Product, Stream
+from StreamerAI.streamchat.ratelimiter import RateLimiter
 
 logger = logging.getLogger("StreamChatHandler")
 
@@ -23,6 +24,7 @@ class StreamChatHandler:
         """
         self.room_id = room_id
         self.platform = platform
+        self.rate_limiter = RateLimiter(2, 30) # 2 comments every 30 seconds
 
     @staticmethod
     def get_comment_response(username: str, message: str):
@@ -36,6 +38,7 @@ class StreamChatHandler:
         Returns:
             The bot's response to the comment.
         """
+        return None
         # Time the comment processing
         start = time.time()
         
@@ -82,6 +85,9 @@ class StreamChatHandler:
         """
         # Log the incoming comment
         logger.info(f"[{self.platform}] comment: {username}: {text}")
+
+        if not self.rate_limiter.meets_limit():
+            return
 
         # Get the stream for the current room
         stream = Stream.select().where(Stream.identifier == self.room_id).get()

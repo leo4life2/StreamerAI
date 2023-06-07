@@ -2,7 +2,7 @@ import argparse
 import logging
 import numpy
 import os
-from StreamerAI.database.database import Product, Asset, reset_database
+from StreamerAI.database.database import Product, Asset, Persona, reset_database
 from langchain.embeddings.openai import OpenAIEmbeddings
 from StreamerAI.settings import BOOTSTRAP_DATA_DIRECTORY
 
@@ -61,9 +61,36 @@ class DatasetBootstrapper:
                 asset = Asset.create(name=asset_filename, product=product, asset=asset_blob)
                 logger.info(f"added asset {asset} ")
 
+    def bootstrap_personas(self):
+        for directory in os.listdir(os.path.join(self.data_directory, "personas")):
+            if directory == ".DS_Store":
+                continue
+
+            logger.info(f"processing directory: {directory}")
+
+            new_viewer_prompt_path = os.path.join(self.data_directory, "personas", directory, "new_viewer_prompt.txt")
+            qa_prompt_path = os.path.join(self.data_directory, "personas", directory, "qa_prompt.txt")
+            scheduled_prompt_path = os.path.join(self.data_directory, "personas", directory, "scheduled_prompt.txt")
+
+            new_viewer_prompt = open(new_viewer_prompt_path, "r").read()
+            qa_prompt = open(qa_prompt_path, "r").read()
+            scheduled_prompt = open(scheduled_prompt_path, "r").read()
+
+            persona_name = directory
+
+            existing_persona_ct = Persona.select().where(Persona.name == persona_name).count()
+            if existing_persona_ct != 0:
+                logger.info(f"persona {persona_name} already exists, skipping...")
+                continue
+
+            persona = Persona.create(name=persona_name, qa_prompt=qa_prompt, new_viewer_prompt=new_viewer_prompt, scheduled_prompt=scheduled_prompt)
+            logger.info(f"added persona {persona}")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--products', action='store_true', help='Bootstrap products')
+    parser.add_argument('--personas', action='store_true', help='Bootstrap personas')
     parser.add_argument('--reset', action='store_true', help='Reset the database before bootstrapping')
 
     args = parser.parse_args()
@@ -75,3 +102,5 @@ def main():
     
     if (args.products):
         bootstrapper.bootstrap_products()
+    if (args.personas):
+        bootstrapper.bootstrap_personas()
