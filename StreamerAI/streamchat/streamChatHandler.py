@@ -38,7 +38,6 @@ class StreamChatHandler:
         Returns:
             The bot's response to the comment.
         """
-        return None
         # Time the comment processing
         start = time.time()
         
