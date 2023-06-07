@@ -6,7 +6,7 @@ import logging
 # Uncomment to include executed SQL queries in the logs
 logger = logging.getLogger('peewee')
 logger.addHandler(logging.StreamHandler())
-logger.setLevel(logging.DEBUG)
+# logger.setLevel(logging.DEBUG)
 
 StreamCommentsDB = SqliteDatabase(DATABASE_PATH, pragmas={
     'journal_mode': 'wal', # allow readers and writers to co-exist
