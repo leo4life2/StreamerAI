@@ -108,7 +108,6 @@ class StreamerAI:
         """
         comment_results = Comment.select().where(Comment.stream == self.stream, Comment.read == False)[:]
         for comment in comment_results:
-
             username = comment.username
             text = comment.comment
             response = comment.reply
