@@ -88,7 +88,6 @@ class StreamerAI:
         """
         comment_results = Comment.select().where(Comment.stream == self.stream, Comment.read == False)[:]
         for comment in comment_results:
-
             username = comment.username
             text = comment.comment
             response = comment.reply
@@ -106,7 +105,8 @@ class StreamerAI:
                 logger.error(f"TTS Error: {e}")
                 continue
 
-            comment.update(read=True)
+            comment.read = True
+            comment.save()
 
     def should_handle_comments_for_paragraph(self, paragraph):
         return paragraph == QUESTION_ANSWERING_SCRIPT_PLACEHOLDER or self.disable_script
