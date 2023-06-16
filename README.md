@@ -33,6 +33,7 @@ The main components of the StreamerAI application include:
 3. Bootstrap database with some product data
    1. `poetry run bootstrap --reset`
    2. `poetry run bootstrap --products`
+   3. `poetry run bootstrap --personas`
 4. Start main script `poetry run start --room_id '<room id here>'`
 5. Launch a streamchat fetcher
    1. Fake (demo use) `poetry run fake --room_id 'room_id_here'`
