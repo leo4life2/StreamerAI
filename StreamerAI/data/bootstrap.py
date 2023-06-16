@@ -26,9 +26,9 @@ class DatasetBootstrapper:
             description_path = os.path.join(self.data_directory, "products", directory, "description.txt")
             script_path = os.path.join(self.data_directory, "products", directory, "script.txt")
 
-            name_file = open(name_path, 'r')
-            description_file = open(description_path, 'r')
-            script_file = open(script_path, 'r')
+            name_file = open(name_path, 'r', encoding="utf-8")
+            description_file = open(description_path, 'r', encoding="utf-8")
+            script_file = open(script_path, 'r', encoding="utf-8")
 
             product_name = name_file.read()
             product_description = description_file.read()
@@ -72,9 +72,9 @@ class DatasetBootstrapper:
             qa_prompt_path = os.path.join(self.data_directory, "personas", directory, "qa_prompt.txt")
             scheduled_prompt_path = os.path.join(self.data_directory, "personas", directory, "scheduled_prompt.txt")
 
-            new_viewer_prompt = open(new_viewer_prompt_path, "r").read()
-            qa_prompt = open(qa_prompt_path, "r").read()
-            scheduled_prompt = open(scheduled_prompt_path, "r").read()
+            new_viewer_prompt = open(new_viewer_prompt_path, "r", encoding="utf-8").read()
+            qa_prompt = open(qa_prompt_path, "r", encoding="utf-8").read()
+            scheduled_prompt = open(scheduled_prompt_path, "r", encoding="utf-8").read()
 
             persona_name = directory
 
