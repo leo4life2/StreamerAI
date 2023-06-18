@@ -47,6 +47,7 @@ class Persona(BaseModel):
     qa_prompt = TextField()
     new_viewer_prompt = TextField()
     scheduled_prompt = TextField()
+    conversation_prompt = TextField()
     current = BooleanField(default=False)
 
 ALL_TABLES = [Stream, Comment, Product, Asset, Persona]

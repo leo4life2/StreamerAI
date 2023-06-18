@@ -24,7 +24,37 @@ class StreamChatHandler:
         """
         self.room_id = room_id
         self.platform = platform
-        self.rate_limiter = RateLimiter(2, 30) # 2 comments every 30 seconds
+        self.comment_rate_limiter = RateLimiter(2, 30) # 2 comments every 30 seconds
+        self.join_rate_limiter = RateLimiter(2, 30) # 2 join messages every 30 seconds
+
+    @staticmethod
+    def get_new_viewer_response(username: str):
+        """
+        Get the bot's response to a new user joining the stream
+
+        Args:
+            username: the username of the user joining the stream
+
+        Returns:
+            The bot's response to the comment
+        """
+         # Time the comment processing
+        start = time.time()
+
+        chain = Chains.create_chain(prompt_type="new_viewer")
+
+        # Predict the bot's response
+        response = chain.predict(
+            audience_name=username
+        )
+        logger.info(
+            f"New User: {username}\n"
+            f"Response: {response}\n"
+        )
+
+        logger.info(f"Time taken to process comment: {time.time() - start} seconds")
+
+        return response
 
     @staticmethod
     def get_comment_response(username: str, message: str):
@@ -46,24 +76,36 @@ class StreamChatHandler:
         product_description = current_product.description if current_product else None
         logger.info(f"Found current product: {current_product}")
 
+        response = None
+
         # Create a new conversation chain
-        chain = Chains.create_chain()
+        if current_product:
+            chain = Chains.create_chain(prompt_type="qa")
 
-        # Get the context related to the product from the message
-        product_context, name = Chains.get_product_context(message, product_description)
-        logger.info(f"Using product: {name}")
+            # Get the context related to the product from the message
+            product_context, name = Chains.get_product_context(message, product_description)
+            logger.info(f"Using product: {name}")
 
-        # Get a text list of other available products
-        other_products = Chains.get_product_list_text(message)
-        logger.debug(f"Using other products:\n{other_products}")
+            # Get a text list of other available products
+            other_products = Chains.get_product_list_text(message)
+            logger.debug(f"Using other products:\n{other_products}")
 
-        # Predict the bot's response
-        response = chain.predict(
-            human_input=message,
-            product_context=product_context,
-            other_available_products=other_products,
-            audience_name=username
-        )
+            # Predict the bot's response
+            response = chain.predict(
+                human_input=message,
+                product_context=product_context,
+                other_available_products=other_products,
+                audience_name=username
+            )
+        else:
+            chain = Chains.create_chain(prompt_type="conversation")
+    
+            # Predict the bot's response
+            response = chain.predict(
+                human_input=message,
+                audience_name=username
+            )
+
         logger.info(
             f"Chat Details:\n"
             f"Message: {message}\n"
@@ -71,7 +113,6 @@ class StreamChatHandler:
         )
 
         logger.info(f"Time taken to process comment: {time.time() - start} seconds")
-
         return response
 
     def on_comment(self, username: str, text: str):
@@ -85,7 +126,7 @@ class StreamChatHandler:
         # Log the incoming comment
         logger.info(f"[{self.platform}] comment: {username}: {text}")
 
-        if not self.rate_limiter.meets_limit():
+        if not self.comment_rate_limiter.meets_limit():
             return
 
         # Get the stream for the current room
@@ -127,6 +168,23 @@ class StreamChatHandler:
             username: The username of the user who joined.
         """
         logger.info(f"[{self.platform}] joined the stream: {username}")
+
+        if not self.join_rate_limiter.meets_limit():
+            return
+
+         # Get the stream for the current room
+        stream = Stream.select().where(Stream.identifier == self.room_id).get()
+
+        # Get the bot's response to the comment
+        response = self.get_new_viewer_response(username)
+        if not response:
+            logger.info("Could not generate response, skipping handling new viewer")
+            return
+
+        # Add the comment and the response to the database
+        Comment.create(stream=stream, username=username, comment='', read=False, reply=response)
+
+        logger.info(f"[{self.platform}] adding new viewer comment for room_id: {self.room_id}")
         
     def on_follow(self, username: str):
         """

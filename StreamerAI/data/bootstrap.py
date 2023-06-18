@@ -71,10 +71,12 @@ class DatasetBootstrapper:
             new_viewer_prompt_path = os.path.join(self.data_directory, "personas", directory, "new_viewer_prompt.txt")
             qa_prompt_path = os.path.join(self.data_directory, "personas", directory, "qa_prompt.txt")
             scheduled_prompt_path = os.path.join(self.data_directory, "personas", directory, "scheduled_prompt.txt")
+            conversation_prompt_path = os.path.join(self.data_directory, "personas", directory, "conversation_prompt.txt")
 
             new_viewer_prompt = open(new_viewer_prompt_path, "r", encoding="utf-8").read()
             qa_prompt = open(qa_prompt_path, "r", encoding="utf-8").read()
             scheduled_prompt = open(scheduled_prompt_path, "r", encoding="utf-8").read()
+            conversation_prompt = open(conversation_prompt_path, "r", encoding="utf-8").read()
 
             persona_name = directory
 
@@ -83,7 +85,13 @@ class DatasetBootstrapper:
                 logger.info(f"persona {persona_name} already exists, skipping...")
                 continue
 
-            persona = Persona.create(name=persona_name, qa_prompt=qa_prompt, new_viewer_prompt=new_viewer_prompt, scheduled_prompt=scheduled_prompt)
+            persona = Persona.create(
+                name=persona_name,
+                qa_prompt=qa_prompt,
+                new_viewer_prompt=new_viewer_prompt,
+                scheduled_prompt=scheduled_prompt,
+                conversation_prompt=conversation_prompt
+            )
             logger.info(f"added persona {persona}")
 
 

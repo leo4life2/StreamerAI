@@ -30,12 +30,6 @@ class Chains:
             LLMChain: the newly created language model chain
         """
         persona = Persona.select().where(Persona.current == True).first()
-        
-        prompt_template = persona.qa_prompt
-        prompt = PromptTemplate(
-            input_variables=["history", "human_input", "product_context", "other_available_products", "audience_name"],
-            template=prompt_template
-        )
 
         if prompt_type == "qa":
             prompt_template = persona.qa_prompt
@@ -43,29 +37,53 @@ class Chains:
                 input_variables=["history", "human_input", "product_context", "other_available_products", "audience_name"],
                 template=prompt_template
             )
+            chatgpt_chain = LLMChain(
+                llm=ChatOpenAI(model_name=LLM_NAME, temperature=temperature),
+                prompt=prompt,
+                verbose=verbose,
+                memory=ConversationBufferWindowMemory(k=3, memory_key="history", input_key="human_input"), # only keep the last 3 interactions
+            )
+            return chatgpt_chain
+        elif prompt_type == "conversation":
+            prompt_template = persona.conversation_prompt
+            prompt = PromptTemplate(
+                input_variables=["history", "human_input", "audience_name"],
+                template=prompt_template
+            )
+            chatgpt_chain = LLMChain(
+                llm=ChatOpenAI(model_name=LLM_NAME, temperature=temperature),
+                prompt=prompt,
+                verbose=verbose,
+                memory=ConversationBufferWindowMemory(k=3, memory_key="history", input_key="human_input"), # only keep the last 3 interactions
+            )
+            return chatgpt_chain
         elif prompt_type == "new_viewer":
             prompt_template = persona.new_viewer_prompt
             prompt = PromptTemplate(
-                input_variables=[],
+                input_variables=["audience_name"],
                 template=prompt_template
             )
+            chatgpt_chain = LLMChain(
+                llm=ChatOpenAI(model_name=LLM_NAME, temperature=temperature),
+                prompt=prompt,
+                verbose=verbose,
+            )
+            return chatgpt_chain
         elif prompt_type == "scheduled":
             prompt_template = persona.scheduled_prompt
             prompt = PromptTemplate(
                 input_variables=[],
                 template=prompt_template
             )
-        else:
-            logging.error(f"create_chain could not handle prompt_type of {prompt_type}")
+            chatgpt_chain = LLMChain(
+                llm=ChatOpenAI(model_name=LLM_NAME, temperature=temperature),
+                prompt=prompt,
+                verbose=verbose
+            )
+            return chatgpt_chain
 
-        chatgpt_chain = LLMChain(
-            llm=ChatOpenAI(model_name=LLM_NAME, temperature=temperature),
-            prompt=prompt,
-            verbose=verbose,
-            memory=ConversationBufferWindowMemory(k=3, memory_key="history", input_key="human_input"), # only keep the last 3 interactions
-        )
-
-        return chatgpt_chain
+        logging.error(f"create_chain could not handle prompt_type of {prompt_type}")
+        return None
 
     @classmethod
     @retry(wait=wait_random_exponential(min=1, max=20), stop=stop_after_attempt(3))
