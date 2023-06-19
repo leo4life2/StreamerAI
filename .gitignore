@@ -139,3 +139,5 @@ dmypy.json
 
 # intellij
 .idea
+
+*.ps1
