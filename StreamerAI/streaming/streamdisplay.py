@@ -8,8 +8,8 @@ class StreamDisplay:
 
     def __init__(self):
         self.window_name = "StreamDisplay"
-        self.img_size_x = 2000
-        self.img_size_y = 2000
+        self.img_size_x = 500
+        self.img_size_y = 500
 
     def setup_display(self):
         # Create a blank image with a white background
@@ -37,7 +37,7 @@ class StreamDisplay:
         logger.info(f"displaying default setup image in window {self.window_name}")
 
         # Move the image to the preset position
-        cv2.moveWindow(self.window_name, 300, 300)
+        cv2.moveWindow(self.window_name, 0, 0)
 
         # Wait for user to ack
         cv2.waitKey(10000)
