@@ -7,7 +7,7 @@ import argparse
 
 from StreamerAI.gpt.chains import Chains
 from StreamerAI.database.database import Stream, Comment, Product, Asset, Persona
-from StreamerAI.settings import QUESTION_ANSWERING_SCRIPT_PLACEHOLDER, ASSET_DISPLAY_SCRIPT_PLACEHOLDER
+from StreamerAI.settings import QUESTION_ANSWERING_SCRIPT_PLACEHOLDER
 from StreamerAI.streaming.tts import TextToSpeech
 from StreamerAI.streaming.streamdisplay import StreamDisplay
 
@@ -52,6 +52,7 @@ class StreamerAI:
         self.products = Product.select()[:]
 
         # MARK: initialize Persona
+        Persona.update(current=False).execute()
         self.persona = Persona.select().where(Persona.name == 'Default').first()
         if persona:
             resolved_persona = Persona.select().where(Persona.name == persona).first()
@@ -59,7 +60,6 @@ class StreamerAI:
                 self.persona = resolved_persona
             else:
                 logger.error(f"persona {persona} supplied as argument, but not found in database - falling back to default")
-        Persona.update(current=False).execute()
         self.persona.current = True
         self.persona.save()
 
@@ -75,6 +75,9 @@ class StreamerAI:
         atexit.register(self.terminate_subprocesses)
         if self.live:
             self.start_polling_for_comments()
+
+        # reset all products to not current, in case this script was killed during execution
+        Product.update(current=False).execute()
 
         logger.info("StreamerAI initialized!")
 
@@ -102,7 +105,7 @@ class StreamerAI:
         if asset:
             self.streamdisplay.display_asset(asset)
             
-    def process_comments(self, current_product):
+    def process_comments(self):
         """
         Processes a list of comments.
         """
@@ -111,19 +114,16 @@ class StreamerAI:
             username = comment.username
             text = comment.comment
             response = comment.reply
-
             logger.info(
-                f"User: {username}"
+                f"User: {username}\n"
                 f"Comment: {text}\n"
                 f"Response: {response}\n"
             )
-            
             try:
                 time_taken = self.tts_service.tts(response)
                 logger.debug(f"TTS server took: {time_taken} seconds")
             except Exception as e:
                 logger.error(f"TTS Error: {e}")
-                continue
 
             comment.read = True
             comment.save()
@@ -133,7 +133,7 @@ class StreamerAI:
         return time_delta > self.scheduled_message_interval
 
     def should_handle_comments_for_paragraph(self, paragraph):
-        return paragraph == QUESTION_ANSWERING_SCRIPT_PLACEHOLDER or self.disable_script
+        return paragraph == QUESTION_ANSWERING_SCRIPT_PLACEHOLDER
     
     def should_display_asset_for_paragraph(self, paragraph):
         return "{{{" in paragraph and "}}}" in paragraph
@@ -159,17 +159,13 @@ class StreamerAI:
         2) "{question}" - denoting that it's time to pause and answer questions
         3) "{{{assetname}}} - denoting that the image or video with name should start playing
         """
-        if self.should_handle_scheduled_message():
-            self.process_scheduled_message()
-
-        logger.info(f"processing paragraph: {paragraph}")
         if self.should_handle_comments_for_paragraph(paragraph):
-            self.process_comments(current_product)
-            time.sleep(1)
+            self.process_comments()
         elif self.should_display_asset_for_paragraph(paragraph):
             assetname = paragraph.replace("{{{", "").replace("}}}", "")
             self.process_media_asset(assetname, current_product)
         else:
+            logger.info(f"Processing paragraph: {paragraph}")
             time_taken = self.tts_service.tts(paragraph)
             logger.info(f"Time taken for TTS request: {time_taken} seconds")
 
@@ -185,7 +181,11 @@ class StreamerAI:
             self.process_paragraph(paragraph, current_product)
 
         # clear out any pending questions before switching to next product
-        self.process_comments(current_product)
+        self.process_comments()
+
+        # perform scheduled message if applicable before switching to next product
+        if self.should_handle_scheduled_message():
+            self.process_scheduled_message()
 
         current_product.current = False
         current_product.save()
@@ -194,12 +194,16 @@ class StreamerAI:
         """
         Runs the StreamerAI instance.
         """
-        # reset all products to not current, in case this script was killed during execution
-        Product.update(current=False).execute()
         while True:
-            for product in self.products:
-                self.process_product(product)
-            logger.info("StreamerAI finished all products - restarting from beginning")
+            if not self.disable_script:
+                for product in self.products:
+                    self.process_product(product)
+
+            if self.should_handle_scheduled_message():
+                self.process_scheduled_message()
+
+            self.process_comments()
+        
             time.sleep(1)
 
 def main():

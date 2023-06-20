@@ -24,9 +24,16 @@ def main():
     The main function that runs an infinite loop, prompting the user to insert a 
     fake stream comment and then sending that comment to the chat handler.
     """
+    current_user_name = FAKE_USERNAME
+
     while True:
         # Prompt the user to input a new fake stream comment.
-        new_comment = input("Insert stream comment: ")
-        
-        # Handle the new comment using the StreamChatHandler.
-        streamChatHandler.on_comment(FAKE_USERNAME, new_comment)
+        user_input = input("type 'c' to insert a comment, 'n' to change the current user name: ")
+        if user_input == 'c':
+            new_comment = input("insert stream comment: ")
+            # Handle the new comment using the StreamChatHandler.
+            streamChatHandler.on_comment(current_user_name, new_comment)
+        elif user_input == 'n':
+            new_user = input("new username: ")
+            streamChatHandler.on_join(new_user)
+            current_user_name = new_user
