@@ -18,18 +18,18 @@ class StreamerAI:
     A class that represents a streamer AI, which can fetch scripts, answer comments, and handle text-to-speech.
     """
     
-    def __init__(self, room_id, live=False, disable_script=False, voice_type=None, voice_style=None, persona=None):
+    def __init__(self, room_id, platform=False, disable_script=False, voice_type=None, voice_style=None, persona=None):
         """
         Initializes a new StreamerAI instance.
 
         Args:
             room_id (str): The ID of the room to connect to.
-            live (bool): Whether to fetch comments live.
+            platform (str): Which platform to fetch comments for.
             voice_type (str): The type of voice to use for text-to-speech.
             voice_style (str): The name of the style to use for text-to-speech.
         """
         self.room_id = room_id
-        self.live = live
+        self.platform = platform
         self.disable_script = disable_script
         self.tts_service = TextToSpeech(voice_type=voice_type, style_name=voice_style)
         self.subprocesses = []
@@ -73,7 +73,7 @@ class StreamerAI:
 
         # MARK: initialize stream comments subprocess
         atexit.register(self.terminate_subprocesses)
-        if self.live:
+        if self.platform:
             self.start_polling_for_comments()
 
         # reset all products to not current, in case this script was killed during execution
@@ -86,8 +86,7 @@ class StreamerAI:
         Starts polling for new comments.
         """
         logger.info("StreamerAI is live, starting subprocess to poll for comments")
-        streamchat_filename = os.path.join(os.path.dirname(__file__), "streamchat.py")
-        comments_command = command = ['python', streamchat_filename, self.room_id]
+        comments_command = ['poetry', 'run', self.platform, '--room_id', self.room_id]
         process = subprocess.Popen(comments_command, stdout=subprocess.PIPE)
         self.subprocesses.append(process)
 
@@ -205,13 +204,21 @@ class StreamerAI:
             self.process_comments()
         
             time.sleep(1)
+            
+class PlatformEnum:
+    DOUYIN = 'douyin'
+    BILI = 'bili'
+    FAKE = 'fake'
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--room_id', type=str, required=True, help='Room ID for the product assistant')
     parser.add_argument('--voice_type', type=str, help='Voice type for text-to-speech')
     parser.add_argument('--voice_style', type=str, help='Voice style for text-to-speech')
-    parser.add_argument('--live', action='store_true', help='Enable live mode for streaming comments')
+    parser.add_argument('--platform',
+                    choices=[PlatformEnum.DOUYIN, PlatformEnum.BILI, PlatformEnum.FAKE],
+                    required=True,
+                    help='Platform to use for fetching streamchat')
     parser.add_argument('--disable_script', action='store_true', help='Disable script reading mode')
     parser.add_argument('--persona', type=str, help='Select a persona to use')
 
@@ -219,7 +226,7 @@ def main():
 
     product_assistant = StreamerAI(
         room_id=args.room_id,
-        live=args.live,
+        platform=args.platform,
         disable_script=args.disable_script,
         voice_type=args.voice_type,
         voice_style=args.voice_style,
