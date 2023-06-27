@@ -47,14 +47,13 @@ class Chains:
         elif prompt_type == "conversation":
             prompt_template = persona.conversation_prompt
             prompt = PromptTemplate(
-                input_variables=["history", "human_input", "audience_name"],
+                input_variables=["human_input"],
                 template=prompt_template
             )
             chatgpt_chain = LLMChain(
                 llm=ChatOpenAI(model_name=LLM_NAME, temperature=temperature),
                 prompt=prompt,
                 verbose=verbose,
-                memory=ConversationBufferWindowMemory(k=3, memory_key="history", input_key="human_input"), # only keep the last 3 interactions
             )
             return chatgpt_chain
         elif prompt_type == "new_viewer":
