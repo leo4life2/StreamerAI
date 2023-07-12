@@ -108,7 +108,7 @@ def main():
     Main function to start the chat handler.
     """
     with playwright() as pw:
-        browser = pw.chromium.launch(headless=False)
+        browser = pw.firefox.launch(headless=False)
         page = browser.new_page()
         page.on("websocket", wss)
         page.goto(url, timeout=0)
