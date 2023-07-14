@@ -128,6 +128,9 @@ class StreamerAI:
             comment.save()
 
     def should_handle_scheduled_message(self):
+        return False # disabled for now
+        if self.disable_script:
+            return False
         time_delta = time.time() - self.last_scheduled_message_time
         return time_delta > self.scheduled_message_interval
 
