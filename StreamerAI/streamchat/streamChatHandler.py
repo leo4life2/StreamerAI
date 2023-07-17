@@ -24,8 +24,8 @@ class StreamChatHandler:
         """
         self.room_id = room_id
         self.platform = platform
-        self.comment_rate_limiter = RateLimiter(2, 30) # 2 comments every 30 seconds
-        self.join_rate_limiter = RateLimiter(2, 30) # 2 join messages every 30 seconds
+        self.comment_rate_limiter = RateLimiter(1, 5) # 2 comments every 30 seconds
+        self.join_rate_limiter = RateLimiter(1, 10) # 2 join messages every 30 seconds
 
     @staticmethod
     def get_new_viewer_response(username: str):
