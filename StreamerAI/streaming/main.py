@@ -68,8 +68,8 @@ class StreamerAI:
         self.scheduled_message_interval = 300 # every 5 minutes
 
         # MARK: initialize display
-        self.streamdisplay = StreamDisplay()
-        self.streamdisplay.setup_display()
+        # self.streamdisplay = StreamDisplay()
+        # self.streamdisplay.setup_display()
 
         # MARK: initialize stream comments subprocess
         atexit.register(self.terminate_subprocesses)
