@@ -34,7 +34,7 @@ The main components of the StreamerAI application include:
    1. `poetry run bootstrap --reset`
    2. `poetry run bootstrap --products`
    3. `poetry run bootstrap --personas`
-4. Start main script `poetry run start --room_id '<room id here>' --platform douyin|bili`
+4. Start main script `poetry run start --room_id ROOM_ID [--voice_type VOICE_TYPE] [--voice_style VOICE_STYLE] --platform {douyin,bili,fake} [--disable_script] [--persona PERSONA]`
 
 ## Testing without actually streaming on a platform
 

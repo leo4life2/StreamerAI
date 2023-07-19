@@ -1,5 +1,6 @@
 import argparse
 import gzip
+import time
 import logging
 import sqlite3
 import StreamerAI.streamchat.douyin.message_pb2 as message_pb2
@@ -107,11 +108,22 @@ def main():
     """
     Main function to start the chat handler.
     """
-    with playwright() as pw:
-        browser = pw.firefox.launch(headless=False)
-        page = browser.new_page()
-        page.on("websocket", wss)
-        page.goto(url, timeout=0)
+    try:
+        with playwright() as pw:
+            browser = pw.firefox.launch(headless=False)
+            page = browser.new_page()
+            page.on("websocket", wss)
+            page.goto(url, timeout=0)
 
-        while True:  # keep the browser open
-            page.wait_for_timeout(100000000)
+            while True:  # keep the browser open
+                page.wait_for_timeout(60000) # wait for 1 minute
+                logger.info("Starting random movements at " + time.strftime("%H:%M:%S", time.localtime()))
+                # press 'a'
+                page.press('body', 'a')
+                # scroll down
+                page.eval_on_selector('body', 'window.scrollTo(0, document.body.scrollHeight);')
+                # scroll up
+                page.eval_on_selector('body', 'window.scrollTo(0, 0);')
+                
+    except KeyboardInterrupt:
+        browser.close()
