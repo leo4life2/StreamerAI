@@ -18,7 +18,7 @@ class StreamerAI:
     A class that represents a streamer AI, which can fetch scripts, answer comments, and handle text-to-speech.
     """
     
-    def __init__(self, room_id, platform=False, disable_script=False, voice_type=None, voice_style=None, persona=None):
+    def __init__(self, room_id, platform=False, disable_script=False, voice_type=None, voice_style=None, persona=None, video_path=None):
         """
         Initializes a new StreamerAI instance.
 
@@ -27,6 +27,8 @@ class StreamerAI:
             platform (str): Which platform to fetch comments for.
             voice_type (str): The type of voice to use for text-to-speech.
             voice_style (str): The name of the style to use for text-to-speech.
+            persona (str): The persona to use for all responses
+            video_path (str): A path to an mp4 file to redirect to virtual webcam
         """
         self.room_id = room_id
         self.platform = platform
@@ -76,10 +78,23 @@ class StreamerAI:
         if self.platform:
             self.start_polling_for_comments()
 
+        # MARK: initialize video
+        if video_path:
+            self.start_webcam_video_playback(video_path)
+
         # reset all products to not current, in case this script was killed during execution
         Product.update(current=False).execute()
 
         logger.info("StreamerAI initialized!")
+
+    def start_webcam_video_playback(self, video_path):
+        """
+        Starts playback of the video at the specified path, routed through the OBS Virtual Webcam
+        """
+        logger.info("StreamerAI is live, starting subprocess to playback video")
+        video_command = ['poetry', 'run', 'virtual_webcam', video_path]
+        process = subprocess.Popen(video_command, stdout=subprocess.PIPE)
+        self.subprocesses.append(process)
 
     def start_polling_for_comments(self):
         """
@@ -224,6 +239,7 @@ def main():
                     help='Platform to use for fetching streamchat')
     parser.add_argument('--disable_script', action='store_true', help='Disable script reading mode')
     parser.add_argument('--persona', type=str, help='Select a persona to use')
+    parser.add_argument('--video_path', type=str, help='Path to video to display in the virtual webcam')
 
     args = parser.parse_args()
 
@@ -233,7 +249,8 @@ def main():
         disable_script=args.disable_script,
         voice_type=args.voice_type,
         voice_style=args.voice_style,
-        persona=args.persona
+        persona=args.persona,
+        video_path=args.video_path
     )
 
     product_assistant.run()
