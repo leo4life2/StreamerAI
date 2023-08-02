@@ -60,6 +60,7 @@ bili = "StreamerAI.streamchat.bili:main"
 fake = "StreamerAI.streamchat.fake:main"
 douyin = "StreamerAI.streamchat.douyin.douyin:main"
 bootstrap = "StreamerAI.data.bootstrap:main"
+virtual_webcam = "StreamerAI.streaming.virtual_webcam:main"
 
 [tool.poetry.group.dev.dependencies]
 httpx = "^0.23.3"
